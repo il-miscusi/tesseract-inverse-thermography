@@ -1,0 +1,28 @@
+name: verify
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+      - run: sudo apt-get update && sudo apt-get install -y gfortran
+      - run: pip install -r requirements.txt
+      - name: Compile the Fortran flow solver
+        working-directory: tesseracts/darcy-flow/fortran
+        run: |
+          gfortran -O2 -fno-fast-math -c darcy.f90 -o darcy.o
+          gfortran -O2 -fno-fast-math darcy.o main.f90 -o darcy
+      - run: make judge
+      - name: End-to-end pixels-to-source finite differences
+        env:
+          COUPLER_INPROCESS: "1"
+          DARCY_SOLVER_BIN: ${{ github.workspace }}/tesseracts/darcy-flow/fortran/darcy
+        run: python scripts/verify_e2e_gradient.py

@@ -92,8 +92,9 @@ def main() -> None:
             errors.append(f"{rel}: {n_placeholders} unresolved <!-- RESULT: --> placeholder(s)")
         for match in ABS_PATH_RE.findall(text):
             errors.append(f"{rel}: absolute local path leaked: {match}")
-        for fig_ref in re.findall(r"figures/[A-Za-z0-9_.-]+", text):
-            if not (ROOT / fig_ref).is_file():
+        for fig_ref in re.findall(r"figures/[A-Za-z0-9_./-]+", text):
+            ref = ROOT / fig_ref
+            if not (ref.is_file() or ref.is_dir()):
                 errors.append(f"{rel}: references missing artifact: {fig_ref}")
 
     if errors:

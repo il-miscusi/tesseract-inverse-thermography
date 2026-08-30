@@ -1,7 +1,7 @@
 # Host-side requirements, pinned to the exact versions every number in the
 # README and write-up was produced with. Each Tesseract carries its own,
 # isolated, in its container.
-tesseract-core==1.11.0
+tesseract-core[runtime]==1.11.0
 tesseract-jax==0.4.1
 numpy==2.5.1
 scipy==1.18.0

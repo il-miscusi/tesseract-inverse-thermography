@@ -19,7 +19,9 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 
 TRACK_PHRASE = "Track 05: Differentiable graphics & rendering"
-PLACEHOLDER_RE = re.compile(r"<!--\s*RESULT:", re.IGNORECASE)
+PLACEHOLDER_RE = re.compile(
+    r"<!--\s*RESULT:|\[\[[A-Z][A-Z0-9_]*(?:[^\]]*)\]\]", re.IGNORECASE
+)
 ABS_PATH_RE = re.compile(r"/Users/[A-Za-z0-9_.-]+/")
 BANNED_PHRASES = ("companion", "not a second form submission")
 
@@ -89,7 +91,7 @@ def main() -> None:
                 errors.append(f"{rel}: contains retired framing: {banned!r}")
         n_placeholders = len(PLACEHOLDER_RE.findall(text))
         if n_placeholders:
-            errors.append(f"{rel}: {n_placeholders} unresolved <!-- RESULT: --> placeholder(s)")
+            errors.append(f"{rel}: {n_placeholders} unresolved result placeholder(s)")
         for match in ABS_PATH_RE.findall(text):
             errors.append(f"{rel}: absolute local path leaked: {match}")
         for fig_ref in re.findall(r"figures/[A-Za-z0-9_./-]+", text):

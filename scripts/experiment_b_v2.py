@@ -9,10 +9,12 @@ iterations ended with the loss still falling (final pixel RMS 61 counts
 against a 2-count noise floor), and the L2-on-Laplacian prior penalises
 exactly the sharp hotspot rims the experiment wants back.
 
-v2 changes ONLY the recovery (init 0.05*q_scale, Adam lr 0.2 with cosine
-decay, TV prior, more iterations); measurement, physics, seeds, camera, noise
-and metrics are identical to v1.  Results go to NEW files —
-figures/experiment_b_v2.json / _fields.npz — never over v1's.
+v2 changes ONLY the recovery (init 0.05*q_scale, L-BFGS-B on z, TV prior);
+measurement, physics, seeds, camera, noise and metrics are identical to v1.
+Results go to NEW files — figures/experiment_b_v2.json / _fields.npz — never
+over v1's.  The 16x8 sweep record: Adam (any schedule) plateaus at rel_l2
+~0.59 on this ill-conditioned deconvolution; L-BFGS reaches 0.08 noise-free
+in 125 evaluations.
 
 Run:  make experiment-b-v2
 """
@@ -33,7 +35,6 @@ from coupler import ColdPlate, DensityFilter
 from coupler.camera import camera_session
 from coupler.session import coupled_session
 from coupler.thermography import (
-    Adam,
     ThermographyForward,
     softplus,
     softplus_grad,
@@ -52,40 +53,49 @@ PROBLEM_SEED = 0
 # ---- amended recovery settings (PROTOCOL.md Amendment v2) -------------------
 LAMBDA_TV = 3e-3    # set on the 16x8 noise-free sweep before this ran
 INIT_FRAC = 0.05    # flat init in units of Q_SCALE (v1's 0.3 carried ~10x the true power)
-LR_MAX, LR_MIN = 0.2, 0.02   # cosine decay over the run
 
 
 def recover(fwd: ThermographyForward, y_meas, shape, *, iters: int,
             one_way: bool, verbose: bool = True) -> dict:
-    """Adam on z with q = Q_SCALE * softplus(z), TV prior on q/Q_SCALE."""
-    z = np.full(shape, np.log(np.expm1(INIT_FRAC)))
-    opt = Adam(lr=LR_MAX)
-    history, matvecs = [], 0
+    """L-BFGS-B on z with q = Q_SCALE * softplus(z), TV prior on q/Q_SCALE."""
+    from scipy.optimize import minimize
+
+    z0 = np.full(shape, np.log(np.expm1(INIT_FRAC)))
+    history, state = [], {"matvecs": 0, "neval": 0}
     fwd._T_warm = None
-    for it in range(iters):
-        opt.lr = LR_MIN + 0.5 * (LR_MAX - LR_MIN) * (
-            1 + np.cos(np.pi * it / max(iters - 1, 1)))
+
+    def fg(z_flat):
+        z = z_flat.reshape(shape)
         q = Q_SCALE * softplus(z)
         data_loss, grad_q, info = fwd.loss_and_grad_q(q, y_meas, one_way=one_way)
-        matvecs += info["adjoint_matvecs"]
+        state["matvecs"] += info["adjoint_matvecs"]
+        state["neval"] += 1
         tv, tv_grad = total_variation_penalty(q / Q_SCALE)
         loss = data_loss + LAMBDA_TV * tv
         g_q = grad_q + LAMBDA_TV * tv_grad / Q_SCALE
-        g_z = g_q * Q_SCALE * softplus_grad(z)
-        z = opt.step(z, g_z)
-        history.append({"iter": it, "loss": loss, "data_loss": data_loss})
-        if verbose and (it % 25 == 0 or it == iters - 1):
-            print(f"    it {it:4d}  loss {loss:.6e}  data {data_loss:.6e}  "
-                  f"fp_iters {info['state'].iterations}", flush=True)
-    return {"q": Q_SCALE * softplus(z), "history": history,
-            "adjoint_matvecs_total": matvecs}
+        history.append({"iter": state["neval"] - 1, "loss": loss,
+                        "data_loss": data_loss})
+        if verbose and (state["neval"] % 25 == 1):
+            print(f"    ev {state['neval']:4d}  loss {loss:.6e}  "
+                  f"data {data_loss:.6e}  fp_iters {info['state'].iterations}",
+                  flush=True)
+        return loss, (g_q * Q_SCALE * softplus_grad(z)).ravel()
+
+    res = minimize(fg, z0.ravel(), jac=True, method="L-BFGS-B",
+                   options=dict(maxiter=iters, maxfun=3 * iters))
+    print(f"    L-BFGS-B: {res.nit} iterations, {state['neval']} evaluations, "
+          f"status {res.status} ({res.message})", flush=True)
+    return {"q": Q_SCALE * softplus(res.x.reshape(shape)), "history": history,
+            "adjoint_matvecs_total": state["matvecs"],
+            "lbfgs": {"nit": int(res.nit), "nfev": state["neval"],
+                      "status": int(res.status), "message": str(res.message)}}
 
 
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--nx", type=int, default=32)
     ap.add_argument("--ny", type=int, default=16)
-    ap.add_argument("--iters", type=int, default=600)
+    ap.add_argument("--iters", type=int, default=250)
     ap.add_argument("--out", type=str, default="figures/experiment_b_v2.json")
     args = ap.parse_args()
 
@@ -185,7 +195,8 @@ def main() -> None:
         "iters": args.iters,
         "prior": {"type": "tv", "lambda_tv": LAMBDA_TV},
         "init_frac": INIT_FRAC,
-        "lr": {"max": LR_MAX, "min": LR_MIN, "schedule": "cosine"},
+        "optimizer": {"method": "L-BFGS-B", "maxiter": args.iters,
+                      "coupled": rec["lbfgs"], "one_way": rec1["lbfgs"]},
         "q_scale": Q_SCALE,
         "noise_counts": NOISE_COUNTS,
         "noise_seed": NOISE_SEED,

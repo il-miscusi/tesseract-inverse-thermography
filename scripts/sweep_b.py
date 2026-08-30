@@ -50,6 +50,7 @@ def main():
     ap.add_argument("--lam-tv", type=float, default=0.0)
     ap.add_argument("--noise", type=float, default=0.0)
     ap.add_argument("--label", type=str, default="sweep")
+    ap.add_argument("--opt", type=str, default="adam", choices=("adam", "lbfgs"))
     args = ap.parse_args()
 
     plate = ColdPlate(nx=args.nx, ny=args.ny, fluid="oil")
@@ -71,9 +72,48 @@ def main():
                      if args.noise else 0.0)
 
         z = np.full(plate.shape, np.log(np.expm1(args.init)))
-        opt = Adam(lr=args.lr)
         fwd._T_warm = None
         t0 = time.time()
+
+        if args.opt == "lbfgs":
+            from scipy.optimize import minimize
+
+            neval = [0]
+
+            def fg(z_flat):
+                zz = z_flat.reshape(plate.shape)
+                q = Q_SCALE * softplus(zz)
+                dl, gq, _ = fwd.loss_and_grad_q(q, y, one_way=False)
+                g = gq.copy()
+                loss = dl
+                if args.lam_smooth:
+                    sp, spg = smoothness_penalty(q / Q_SCALE)
+                    loss += args.lam_smooth * sp
+                    g += args.lam_smooth * spg / Q_SCALE
+                if args.lam_tv:
+                    tv, tvg = total_variation_penalty(q / Q_SCALE)
+                    loss += args.lam_tv * tv
+                    g += args.lam_tv * tvg / Q_SCALE
+                neval[0] += 1
+                if neval[0] % 25 == 0:
+                    m = source_metrics(q, q_true)
+                    print(f"[{args.label}] ev {neval[0]:4d} loss {loss:.4e} "
+                          f"rel_l2 {m['rel_l2']:.4f} amp {m['amplitude_ratio']:.3f} "
+                          f"({time.time()-t0:.0f}s)", flush=True)
+                return loss, (g * Q_SCALE * softplus_grad(zz)).ravel()
+
+            res = minimize(fg, z.ravel(), jac=True, method="L-BFGS-B",
+                           options=dict(maxiter=args.iters, maxfun=3 * args.iters))
+            q_fin = Q_SCALE * softplus(res.x.reshape(plate.shape))
+            m = source_metrics(q_fin, q_true)
+            print(f"[{args.label}] FINAL(lbfgs, {res.nit} its, {neval[0]} evals) "
+                  f"loss {res.fun:.4e} rel_l2 {m['rel_l2']:.4f} "
+                  f"amp {m['amplitude_ratio']:.3f} cen {m['centroid_shift_cells']:.2f} "
+                  f"power {m['total_power_ratio']:.3f} ({time.time()-t0:.0f}s)",
+                  flush=True)
+            return
+
+        opt = Adam(lr=args.lr)
         for it in range(args.iters):
             if args.lr_final is not None:
                 opt.lr = args.lr_final + 0.5 * (args.lr - args.lr_final) * (

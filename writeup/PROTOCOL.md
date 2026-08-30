@@ -157,7 +157,12 @@ Only the recovery changes:
 - Prior: smoothed isotropic total variation on q/Q_SCALE
   (`total_variation_penalty`, eps = 1e-6), lambda_tv = 3e-3, set on a 16x8
   noise-free sweep before this run (scripts/sweep_b.py).
-- Optimizer: Adam on z, lr cosine-decayed 0.2 -> 0.02, 600 iterations.
+- Optimizer: L-BFGS-B on z (scipy, analytic gradient, maxiter 250, maxfun
+  750). Declared after the 16x8 sweep and before the v2 run: Adam with a
+  cosine schedule (0.2 -> 0.02, 300 iters) plateaus at rel_l2 ~0.59 on this
+  ill-conditioned diffusive deconvolution while the truth-init probe shows
+  rel_l2 0.06 is attainable; L-BFGS reaches rel_l2 0.08 noise-free in 125
+  evaluations (sweep harness: scripts/sweep_b.py, runs S1/S2).
 - Artifacts: figures/experiment_b_v2.json and
   figures/experiment_b_v2_fields.npz (q_true, both recovered maps, T fields,
   measured/clean/rendered/residual images, loss histories). v1 artifacts are

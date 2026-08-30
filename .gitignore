@@ -1,0 +1,6 @@
+__pycache__/
+*.pyc
+*.o
+*.mod
+tesseracts/darcy-flow/fortran/darcy
+.DS_Store

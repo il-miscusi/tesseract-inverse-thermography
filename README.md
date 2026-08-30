@@ -75,7 +75,7 @@ equilibrium. On the declared 16×8 physics grid and 48×32 sensor:
 | verdict | **PASS** |
 
 The independent served-container receipt also passes on an 8×4 / 24×16 smoke
-composition at **1.14e-07** relative error in 67 seconds. It records all four
+composition at **1.14e-07** relative error in 80 seconds. It records all four
 image IDs, execution mode, and source commit in
 [`figures/container_e2e_gradient_check.json`](figures/container_e2e_gradient_check.json).
 

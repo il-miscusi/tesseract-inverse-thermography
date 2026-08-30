@@ -80,8 +80,8 @@
       <div class="lbl">adjoint GMRES matvecs across 317 objective evaluations — each one a VJP chain over three components</div></div>
     <div class="card"><div class="big">1.65&times;</div>
       <div class="lbl">final recorded image-space loss gap: coupled vs frozen-viscosity model, same recovery budget</div></div>
-    <div class="card"><div class="big">4</div>
-      <div class="lbl">Tesseracts: Fortran Darcy flow, PyTorch viscosity closure, JAX heat transport, JAX thermal camera</div></div>
+    <div class="card"><div class="big">1.1e-07</div>
+      <div class="lbl">finite-difference error through four served containers · 80 s · PASS</div></div>
   </div>
 
   <h2 id="chain">The gradient no single framework can trace</h2>
@@ -90,8 +90,9 @@
      The camera renders that equilibrium to counts. Differentiating the composition uses
      only each component's VJP endpoint: GMRES solves the adjoint system matrix-free, one
      three-component VJP chain per matvec, then one heat-transport VJP lands the gradient
-     on q. The checked-in results use Tesseract's in-process API mode; they do not claim
-     served-container verification.</p>
+     on q. A separate receipt builds and serves all four images, then verifies the complete
+     derivative through real HTTP/container boundaries at 1.1e-07
+     relative error.</p>
   <figure><img src="assets/chain.png" alt="Differentiable chain diagram"></figure>
 
   <h2 id="results">Results: the coupling is load-bearing</h2>

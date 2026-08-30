@@ -216,7 +216,7 @@ one PASS/FAIL verdict; `make verify` reruns the in-process end-to-end
 finite-difference gate. `make verify-containers` builds all four Tesseract
 images, serves them, and repeats a small complete pixels-to-source gradient
 check through the HTTP/container boundaries: best relative error 1.14e-07,
-PASS in 67 seconds. Its JSON receipt records image IDs and source commit. CI
+PASS in 80 seconds. Its JSON receipt records image IDs and source commit. CI
 compiles the Fortran solver from source and runs the fast judged surface on
 every push. All dependencies are pinned exactly. Provenance of the physics
 core copied from the same author's Track 02 repository is recorded in

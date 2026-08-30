@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import sys
 import time
 from pathlib import Path
@@ -114,6 +115,17 @@ def main() -> None:
         "seed": args.seed,
         "coupling_scale": args.coupling_scale,
         "one_way": args.one_way,
+        "execution_mode": (
+            "served_containers"
+            if not os.environ.get("COUPLER_INPROCESS", "").strip()
+            else "in_process_api"
+        ),
+        "images": {
+            "darcy": "darcy-flow:latest",
+            "heat": "heat-transport:latest",
+            "closure": "viscosity-closure:latest",
+            "camera": "thermal-camera:latest",
+        },
         "loss": loss0,
         "grad_norm": float(np.linalg.norm(grad_q)),
         "adjoint_matvecs": info["adjoint_matvecs"],

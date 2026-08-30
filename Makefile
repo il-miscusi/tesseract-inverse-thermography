@@ -1,5 +1,5 @@
 # Tesseract Hackathon 2026 - Track 05 primary entry
-.PHONY: build judge test verify experiment-a experiment-b experiment-b-v2 experiment-c audit figures renderer-figure animation landing
+.PHONY: build judge test verify verify-containers experiment-a experiment-b experiment-b-v2 experiment-c audit figures renderer-figure animation landing
 
 PYTHON ?= python3
 FORTRAN_DIR := tesseracts/darcy-flow/fortran
@@ -40,6 +40,11 @@ test:
 verify:
 	COUPLER_INPROCESS=1 DARCY_SOLVER_BIN="$(CURDIR)/tesseracts/darcy-flow/fortran/darcy" \
 	"$(PYTHON)" scripts/verify_e2e_gradient.py
+
+verify-containers:
+	COUPLER_INPROCESS= DARCY_SOLVER_BIN= OMP_NUM_THREADS=1 \
+	"$(PYTHON)" scripts/verify_e2e_gradient.py --nx 8 --ny 4 --n-u 24 --n-v 16 \
+		--out figures/container_e2e_gradient_check.json
 
 experiment-a:
 	COUPLER_INPROCESS=1 DARCY_SOLVER_BIN="$(CURDIR)/tesseracts/darcy-flow/fortran/darcy" \

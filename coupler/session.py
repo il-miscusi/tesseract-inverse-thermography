@@ -33,8 +33,9 @@ def _open(stack, name: str, image: str, inprocess: set[str]):
     In-process is the iteration mode: identical code, no HTTP, no JSON -- an
     order of magnitude faster per call on these small arrays.  It needs the
     component's dependencies on the host (JAX, torch; for the Fortran solver a
-    host-compiled `darcy` binary via DARCY_SOLVER_BIN).  Containers remain the
-    reproduction mode and what every verification gate runs against.
+    host-compiled `darcy` binary via DARCY_SOLVER_BIN). Served containers are
+    the interoperability proof exercised by ``make verify-containers``; the
+    fast judge and CI gates intentionally use the in-process API mode.
     """
     if name in inprocess:
         api_dir = API_DIRS[name]

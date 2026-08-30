@@ -140,13 +140,19 @@ only be met is not a criterion.
 **v2 — the amended protocol.** The amendment (recorded in PROTOCOL.md's
 Deviations section before the rerun) revises the recovery configuration; the
 data, seeds, and two-arm design are unchanged. Final numbers, from
-`figures/experiment_b.json`:
+`figures/experiment_b_v2.json`:
 
-<!-- RESULT: experiment B v2 coupled relative L2 error -->
-<!-- RESULT: experiment B v2 coupled centroid shift (cells) -->
-<!-- RESULT: experiment B v2 one-way relative L2 error -->
-<!-- RESULT: experiment B v2 coupled vs one-way power ratio -->
-<!-- RESULT: experiment B v2 verdict against the amended criteria -->
+- Coupled arm: relative L2 error **0.1370**, amplitude ratio 1.115, final
+  data loss 2.022 against a noise floor of 2.0.
+- Coupled centroid shift: **0.02 cells**.
+- One-way arm: relative L2 error **0.2457** (1.79x the coupled error),
+  centroid shift 0.17 cells, final data loss 3.339 — a converged fit that
+  stays 65% above the noise floor because its forward model is wrong for the
+  data.
+- Total-power ratio: coupled **1.000**, one-way 1.017.
+- Verdict: the amended pre-declared criteria (coupled rel L2 < 0.5 AND
+  centroid shift < 1.5 cells) **PASS**; the end-to-end FD gradient gate was
+  re-verified on the final configuration (best relative error 3.6e-07).
 
 The coupled-vs-one-way comparison is reported whatever its sign; if the wrong
 forward model recovers the source just as well, that is the published result.

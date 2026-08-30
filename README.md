@@ -2,6 +2,9 @@
 
 **Tesseract Hackathon 2026 — Track 05: Differentiable graphics & rendering**
 
+[Four-page technical paper](output/pdf/tesseract_inverse_thermography.pdf) ·
+[live results page](https://il-miscusi.github.io/tesseract-inverse-thermography/)
+
 A thermal camera is a renderer. It takes a temperature field and produces an
 image through Planck emission, surface emissivity, perspective projection,
 optical blur, vignetting, and a sensor transfer function — every stage a
@@ -169,6 +172,7 @@ make verify-containers # build/serve 4 images + FD across real boundaries
 make experiment-a  # camera self-calibration
 make experiment-b-v2 # amended source recovery through the coupled equilibrium
 make experiment-c  # renderer necessity with 64x32 truth / 32x16 inversion
+make paper         # regenerate the four-page PDF from committed artifacts
 ```
 
 `make judge` compiles the Fortran solver before running the gates. All host

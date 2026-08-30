@@ -1,5 +1,5 @@
 # Tesseract Hackathon 2026 - Track 05 primary entry
-.PHONY: build build-images judge test verify verify-containers experiment-a experiment-b experiment-b-v2 experiment-c audit figures renderer-figure animation landing
+.PHONY: build build-images judge test verify verify-containers experiment-a experiment-b experiment-b-v2 experiment-c audit figures renderer-figure paper animation landing
 
 PYTHON ?= python3
 TESSERACT ?= tesseract
@@ -19,6 +19,9 @@ figures:
 
 renderer-figure:
 	"$(PYTHON)" scripts/make_renderer_figure.py
+
+paper:
+	"$(PYTHON)" scripts/make_paper.py
 
 animation:
 	COUPLER_INPROCESS=1 DARCY_SOLVER_BIN="$(CURDIR)/tesseracts/darcy-flow/fortran/darcy" \

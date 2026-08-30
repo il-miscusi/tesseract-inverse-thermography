@@ -49,6 +49,7 @@ def main() -> None:
         "figures/experiment_a.json", "figures/experiment_b.json",
         "figures/experiment_c_renderer.json", "figures/renderer_necessity.png",
         "figures/container_e2e_gradient_check.json",
+        "output/pdf/tesseract_inverse_thermography.pdf",
         "tests/test_camera.py", ".github/workflows/verify.yml",
     )
     for relative in required:

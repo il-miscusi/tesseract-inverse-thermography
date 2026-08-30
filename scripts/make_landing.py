@@ -225,6 +225,7 @@ def main() -> None:
   <footer>
     Tesseract Hackathon 2026 &middot; Track 05 &middot;
     <a href="{REPO_URL}">source</a> &middot;
+    <a href="{REPO_URL}/blob/main/output/pdf/tesseract_inverse_thermography.pdf">paper</a> &middot;
     <a href="{REPO_URL}/blob/main/writeup/PROTOCOL.md">pre-registered protocol</a> &middot;
     Apache-2.0. Every figure on this page regenerates from committed artifacts with
     <code>make figures renderer-figure landing</code>.

@@ -1,0 +1,26 @@
+name: "darcy-flow"
+version: "1.0.0"
+description: |
+  Darcy/Brinkman flow through a designable porous medium.
+
+  Numerics and derivative are both Fortran: the gradient is a HAND-DERIVED
+  DISCRETE ADJOINT, not the output of any AD tool.  This is the component that
+  no Python autodiff framework can trace through, which is the point.
+
+build_config:
+  base_image: "debian:bookworm-slim"
+
+  extra_packages:
+    - gfortran
+
+  package_data:
+    - ["fortran/darcy.f90", "fortran/darcy.f90"]
+    - ["fortran/main.f90", "fortran/main.f90"]
+    - ["darcy_bridge.py", "darcy_bridge.py"]
+
+  custom_build_steps:
+    - |
+      RUN cd /tesseract/fortran && \
+          gfortran -O2 -fno-fast-math -c darcy.f90 -o darcy.o && \
+          gfortran -O2 -fno-fast-math darcy.o main.f90 -o darcy && \
+          rm -f darcy.o

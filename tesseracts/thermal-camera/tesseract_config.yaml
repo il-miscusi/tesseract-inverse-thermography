@@ -1,0 +1,16 @@
+name: "thermal-camera"
+version: "1.0.0"
+description: |
+  Physically based LWIR thermal-camera renderer, in JAX: band-integrated Planck
+  emission with a per-pixel emissivity map and reflected ambient, homographic
+  projection with differentiable bilinear sampling, Gaussian PSF optics with a
+  differentiable width, cos^4 vignetting, and a gain/offset sensor model.
+
+  Every stage is differentiable, so a loss on pixels can be pulled back to the
+  temperature field -- and through it, into the physics that produced it.
+
+build_config:
+  base_image: "debian:bookworm-slim"
+
+  package_data:
+    - ["_render.py", "_render.py"]

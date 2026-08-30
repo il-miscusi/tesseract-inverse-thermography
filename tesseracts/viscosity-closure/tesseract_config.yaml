@@ -1,0 +1,18 @@
+name: "viscosity-closure"
+version: "1.0.0"
+description: |
+  Hybrid mechanistic + learned model of coolant viscosity mu(T), differentiated
+  by PyTorch tape-based autograd.
+
+  Arrhenius backbone times a learned log-space correction, so mu > 0 always.
+  Ships two trained fluids (ISO VG 22 immersion oil, water) and a coupling_scale
+  knob that flattens the curve for the coupling-strength sweep.
+  This is the component that closes the multiphysics loop.
+
+build_config:
+  base_image: "debian:bookworm-slim"
+
+  package_data:
+    - ["_model.py", "_model.py"]
+    - ["closure_weights_oil.pt", "closure_weights_oil.pt"]
+    - ["closure_weights_water.pt", "closure_weights_water.pt"]

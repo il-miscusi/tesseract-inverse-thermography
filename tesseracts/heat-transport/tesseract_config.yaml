@@ -1,0 +1,14 @@
+name: "heat-transport"
+version: "1.0.0"
+description: |
+  Steady advection-diffusion of temperature on a cell-centred finite-volume grid,
+  in JAX.
+
+  The derivative uses the implicit function theorem on the discrete residual
+  rather than tracing the iterative solver, so it is exact to solver tolerance.
+
+build_config:
+  base_image: "debian:bookworm-slim"
+
+  package_data:
+    - ["_physics.py", "_physics.py"]

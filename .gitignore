@@ -4,3 +4,4 @@ __pycache__/
 *.mod
 tesseracts/darcy-flow/fortran/darcy
 .DS_Store
+figures/_smoke*.json

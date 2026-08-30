@@ -159,7 +159,14 @@ def softplus(z: np.ndarray) -> np.ndarray:
 
 
 def softplus_grad(z: np.ndarray) -> np.ndarray:
-    return 1.0 / (1.0 + np.exp(-z))
+    """Numerically stable sigmoid, including extreme optimizer probes."""
+    z = np.asarray(z)
+    out = np.empty_like(z, dtype=np.result_type(z, float))
+    positive = z >= 0
+    out[positive] = 1.0 / (1.0 + np.exp(-z[positive]))
+    ez = np.exp(z[~positive])
+    out[~positive] = ez / (1.0 + ez)
+    return out
 
 
 def total_variation_penalty(q_n: np.ndarray, eps: float = 1e-6) -> tuple[float, np.ndarray]:

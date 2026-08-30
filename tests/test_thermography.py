@@ -65,6 +65,15 @@ def test_softplus_grad_is_sigmoid_and_positive():
     assert (g > 0).all()
 
 
+def test_softplus_grad_is_finite_at_extreme_optimizer_probes():
+    z = np.array([-1e4, -1e3, 0.0, 1e3, 1e4])
+    with np.errstate(over="raise", invalid="raise"):
+        g = softplus_grad(z)
+    assert np.isfinite(g).all()
+    assert np.array_equal(g[[0, 1]], np.zeros(2))
+    assert np.array_equal(g[[3, 4]], np.ones(2))
+
+
 def test_adam_converges_on_quadratic():
     opt = Adam(lr=0.1)
     x = np.array([5.0, -3.0])

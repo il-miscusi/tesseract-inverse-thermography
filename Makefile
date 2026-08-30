@@ -1,4 +1,4 @@
-# Tesseract Hackathon 2026 - differentiable thermography companion
+# Tesseract Hackathon 2026 - Track 05 primary entry
 .PHONY: judge test verify experiment-a experiment-b audit
 
 PYTHON ?= python3

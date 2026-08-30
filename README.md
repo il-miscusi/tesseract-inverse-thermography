@@ -1,41 +1,68 @@
-# Differentiable thermography through a coupled equilibrium
+# Inverse rendering through a multiphysics equilibrium
 
-**Tesseract Hackathon 2026 - Track 05 companion showcase**
+**Tesseract Hackathon 2026 — Track 05: Differentiable graphics & rendering**
 
-A physically based thermal-camera Tesseract turns temperature fields into LWIR
-sensor counts through Planck-band emission, emissivity, camera pose, optical
-blur, vignetting, gain, and offset. Its pixel VJP is composed with a coupled
-Fortran/JAX/PyTorch cold-plate equilibrium, so a loss on one thermal image can
-recover the hidden volumetric heat-source map that produced it.
-
-This repository is a companion to
-[`tesseract-coupled-adjoint`](https://github.com/il-miscusi/tesseract-coupled-adjoint),
-the primary Track 02 entry. The event terms allow one submission per person or
-team, so this is **not a second form submission unless the organisers explicitly
-approve it**.
+A thermal camera is a renderer. It takes a temperature field and produces an
+image through Planck emission, surface emissivity, perspective projection,
+optical blur, vignetting, and a sensor transfer function — every stage a
+differentiable map. This entry builds that renderer as a Tesseract and then
+points its gradients *backwards through a live multiphysics simulation*: from
+the pixels of a single LWIR image, through the camera model, through a coupled
+Fortran/JAX/PyTorch flow–heat equilibrium, to the hidden volumetric heat-source
+map that produced the image. Differentiable rendering here is not a
+visualization layer bolted onto a solver; it is the measurement model of an
+inverse problem that cannot be posed without it.
 
 ## The differentiable chain
 
 ```text
-counts = Camera(T*, emissivity, PSF, gain, offset)       JAX Tesseract
-T* solves T = Heat(gamma, Flow(gamma, Viscosity(T)); q)
-                   JAX          Fortran       PyTorch
+counts = Camera(T*, emissivity, PSF, gain, offset)        JAX Tesseract
+T* solves  T = Heat(gamma, Flow(gamma, Viscosity(T)); q)
+                    JAX           Fortran        PyTorch
 
 pixel loss -> camera VJP -> coupled implicit adjoint -> dJ/dq
 ```
 
-The camera does not treat temperature as brightness. It integrates Planck
-radiance over the 8-14 micrometre LWIR band, adds reflected ambient radiance
-under a grey opaque surface model, projects through a homography with bilinear
-sampling, applies a differentiable Gaussian PSF and cos-to-the-fourth
-vignetting, then converts radiance to digital counts. Measurement noise is
-added outside the differentiable renderer.
+Four components, four independent differentiation systems, one gradient:
 
-## Correctness gate
+- **Thermal camera** — JAX autodiff. Band-integrated Planck radiance over
+  8–14 µm, grey opaque surfaces with reflected ambient, a homography with
+  differentiable bilinear sampling, a Gaussian PSF whose *width* is itself
+  differentiable, cos⁴ vignetting, and a gain/offset conversion to digital
+  counts. Noise is added to measurements outside the gradient path.
+- **Darcy/Brinkman flow** — Fortran, with a **hand-derived discrete adjoint**.
+  No tape exists in this language; the adjoint is written by hand and checked
+  against finite differences.
+- **Heat transport** — JAX, differentiated through its fixed point by the
+  implicit function theorem rather than by unrolling.
+- **Viscosity closure** — PyTorch, a learned model with its own tape.
+
+## Why Tesseract is essential
+
+The boundary crossings above are real, not decorative. A Fortran solver has no
+autodiff to expose; PyTorch and JAX tapes cannot see each other; and the
+coupled temperature field is defined implicitly by a fixed point, so no single
+framework's tape could record it even in principle. Tesseract's contract — each
+component publishes `apply` and `vector_jacobian_product` behind a typed
+interface — is what lets a matrix-free implicit-function-theorem adjoint treat
+a hand-written Fortran adjoint, two ML tapes, and a rendering VJP as
+interchangeable parts of one chain rule. Remove Tesseract and you do not get a
+slower version of this system; you get four gradients that cannot be composed.
+The pixels→source derivative simply stops existing.
+
+The problem is also not solvable component-by-component. Calibrating the camera
+needs the physics to say what the plate actually looks like; recovering the
+source needs the camera to say what the sensor actually measured; and the
+flow–viscosity feedback couples every temperature to every other. Experiment B
+quantifies exactly this: an arm that freezes the viscosity feedback — same
+data, same prior, same optimizer — is biased relative to the full coupled
+adjoint.
+
+## Correctness gates
 
 `scripts/verify_e2e_gradient.py` checks the complete pixels-to-source gradient
-against central finite differences of the camera and the full coupled
-equilibrium. On the declared 16x8 physics grid and 48x32 sensor:
+against central finite differences through the camera *and* the full coupled
+equilibrium. On the declared 16×8 physics grid and 48×32 sensor:
 
 | quantity | result |
 |---|---:|
@@ -43,62 +70,85 @@ equilibrium. On the declared 16x8 physics grid and 48x32 sensor:
 | required threshold | 1e-04 |
 | verdict | **PASS** |
 
-The fast test suite adds 18 independent gates for Planck monotonicity,
-emissivity/reflection limits, homography, sampling, PSF normalisation,
-vignetting, rendering behavior, a temperature VJP finite-difference check,
-source metrics, regularisation, and optimisation utilities.
+The fast suite adds 18 independent gates: Planck monotonicity,
+emissivity/reflection limits, homography round trips, bilinear sampling, PSF
+normalisation, vignetting, rendering behaviour, a temperature-VJP
+finite-difference check, source metrics, regularisation, and optimisation
+utilities. CI compiles the Fortran solver from source and runs the whole judged
+surface on every push.
 
-## Pre-declared experiments
+## Pre-registered experiments
 
-The complete protocol was committed before the reported runs
-([`writeup/PROTOCOL.md`](writeup/PROTOCOL.md)).
+The full protocol — grids, seeds, priors, optimizer settings, success criteria
+— was committed before any reported run
+([`writeup/PROTOCOL.md`](writeup/PROTOCOL.md)). Failures are reported at the
+same volume as successes.
 
-**A - camera self-calibration.** From one image and a known temperature field,
-recover spatial emissivity, PSF width, gain, and offset across five fixed noise
-levels. Gain-emissivity identifiability is explicitly measured rather than
-hidden by reporting only image loss.
+**A — camera self-calibration (inverse rendering).** From one image of a known
+temperature field, recover the spatial emissivity map, PSF width, gain, and
+offset across five fixed noise levels. Gain was recovered to 0.20–0.21%
+relative error at every noise level. Separate PSF and offset estimates stayed
+weakly identified from a single image (PSF absolute error 0.91 px, offset
+relative error 19.0%) — the pre-declared gain/emissivity ambiguity, measured
+and reported rather than hidden behind an image-loss number.
 
-**B - source recovery through the physics.** From one noisy thermal image,
-recover a 32x16 non-negative two-hotspot heat-source map. The headline arm uses
-the full coupled adjoint. The comparison arm uses frozen-viscosity physics
-against the same coupled measurement, quantifying bias from ignoring feedback.
-Both arms keep the same data, prior, optimiser, and iteration budget; the sign
-of the comparison is reported whatever it is.
+**B — source recovery through the physics.** From one noisy thermal image,
+recover a 32×16 non-negative two-hotspot heat-source map, using the coupled
+adjoint as the headline arm and frozen-viscosity physics as the comparison arm
+against the same coupled measurement. The first registered run (v1) **failed
+its pre-declared target** — coupled relative L2 error 0.9706 against a 0.5
+criterion, centroid shift 6.85 cells — while still recovering total source
+power to a 1.041 ratio versus 1.364 for the one-way arm. The protocol was then
+amended (recorded in its Deviations section) and rerun as v2:
 
-The registered success criterion for the coupled arm is relative source error
-below 0.5 and centroid shift below 1.5 cells. Experiment outputs are JSON and
-NPZ artifacts; smoke-run files are excluded from the judged surface.
+<!-- RESULT: experiment B v2 coupled relative L2 error -->
+<!-- RESULT: experiment B v2 coupled centroid shift (cells) -->
+<!-- RESULT: experiment B v2 one-way relative L2 error -->
+<!-- RESULT: experiment B v2 coupled vs one-way power ratio -->
 
-## Reported results
-
-The complete, seed- and configuration-stamped outputs are checked in as
+All numbers above and in the writeup come from the checked-in,
+seed-and-configuration-stamped artifacts in
 [`figures/experiment_a.json`](figures/experiment_a.json) and
-[`figures/experiment_b.json`](figures/experiment_b.json), with field arrays in
-the matching NPZ files. Experiment A recovered gain to 0.20--0.21% relative
-error across the five noise levels, while separate PSF and offset estimates
-remained weakly identified from one image (PSF absolute error 0.91 px; offset
-relative error 18.98%). This is the pre-declared gain/emissivity ambiguity, not
-a hidden success claim.
+[`figures/experiment_b.json`](figures/experiment_b.json), with the recovered
+field arrays in the matching NPZ files.
 
-Experiment B did not meet its pre-declared coupled target: coupled relative
-source L2 error was 0.9706 with a 6.85-cell centroid shift. It nevertheless
-recovered total source power to a 1.041 ratio, versus 1.364 for the identical
-one-way arm; one-way relative L2 was 0.9814. These are measurements of the
-inverse problem's difficulty and of the feedback-model bias, reported without
-cherry-picking.
+## Why this matters outside a hackathon
+
+Locating a hot component inside an electronics cooling assembly from a thermal
+image is a standing industrial problem — the camera sees the plate surface, not
+the die that is failing under it. Doing that inference honestly requires
+exactly this stack: a radiometrically correct differentiable camera (an
+uncooled microbolometer's counts are not temperatures), and gradients that pass
+through the conjugate flow–heat physics coupling the source to the surface.
+The same pattern — differentiable sensor model composed with a differentiable
+equilibrium — covers pyrometry in additive manufacturing and non-destructive
+thermographic inspection.
 
 ## Reproduce
 
-Requires Python 3.10 or newer and `gfortran`; Docker is optional because every
+Requires Python 3.10+ and `gfortran`; Docker is optional because every
 component can run from its `tesseract_api.py` in-process.
 
 ```bash
 pip install -r requirements.txt
-make judge       # 18 fast tests + stored end-to-end artifact audit
-make verify      # rerun pixels-to-q finite differences
-make experiment-a
-make experiment-b
+make judge        # submission audit + 18 fast gates, one PASS/FAIL verdict
+make verify       # rerun the pixels-to-q finite-difference check
+make experiment-a # camera self-calibration
+make experiment-b # source recovery through the coupled equilibrium
 ```
 
-All host and component dependencies are exactly pinned. Apache-2.0; the copied
-Track 02 physics core retains its original notice in [`NOTICE.md`](NOTICE.md).
+All host dependencies are exactly pinned in `requirements.txt`; each Tesseract
+carries its own pinned environment. `make judge` is the single command a judge
+needs: it audits the submission surface, runs every fast gate, and prints one
+verdict.
+
+## License and provenance
+
+Apache-2.0. The coupled physics core (Fortran flow solver and its hand-derived
+adjoint, JAX heat transport, PyTorch viscosity closure, and the
+implicit-adjoint coupler) originated in the same author's Track 02 repository;
+[`NOTICE.md`](NOTICE.md) records exactly what was copied and what is new here.
+The renderer, the pixels→source adjoint chain, and both inverse-rendering
+experiments exist only in this repository.
+
+Technical writeup: [`writeup/WRITEUP.md`](writeup/WRITEUP.md).

@@ -1,45 +1,100 @@
 # Copyright 2026 Tesseract Hackathon submission. SPDX-License-Identifier: Apache-2.0
-"""Fail when the companion's judged surface drifts from committed evidence."""
+"""Fail when the judged surface drifts from committed evidence.
+
+Asserts the Track 05 submission surface: the track is named where judges
+read, the license is Apache-2.0, the numbers trace to figure artifacts, no
+result placeholders remain, and no machine-local paths leak into docs.
+While the <!-- RESULT: ... --> placeholders for experiment B v2 exist, this
+audit FAILS by design — the repo is not submittable until the numbers land.
+"""
 
 from __future__ import annotations
 
 import ast
 import json
+import re
 from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
+
+TRACK_PHRASE = "Track 05: Differentiable graphics & rendering"
+PLACEHOLDER_RE = re.compile(r"<!--\s*RESULT:", re.IGNORECASE)
+ABS_PATH_RE = re.compile(r"/Users/[A-Za-z0-9_.-]+/")
+BANNED_PHRASES = ("companion", "not a second form submission")
+
+
+def _doc_files() -> list[Path]:
+    docs = [ROOT / "README.md", ROOT / "NOTICE.md", ROOT / "CITATION.cff"]
+    docs += sorted((ROOT / "writeup").glob("*.md"))
+    docs += sorted(ROOT.rglob("*.ipynb"))
+    return [p for p in docs if p.is_file()]
 
 
 def main() -> None:
     errors: list[str] = []
     required = (
         "README.md", "LICENSE", "NOTICE.md", "CITATION.cff", "requirements.txt",
-        "writeup/PROTOCOL.md", "figures/e2e_gradient_check.json",
+        "writeup/PROTOCOL.md", "writeup/WRITEUP.md",
+        "figures/e2e_gradient_check.json",
+        "figures/experiment_a.json", "figures/experiment_b.json",
         "tests/test_camera.py", ".github/workflows/verify.yml",
     )
     for relative in required:
         if not (ROOT / relative).is_file():
             errors.append(f"missing required file: {relative}")
 
+    # License must be Apache-2.0.
+    license_path = ROOT / "LICENSE"
+    if license_path.is_file() and "Apache License" not in license_path.read_text():
+        errors.append("LICENSE is not the Apache License")
+
+    # Exactly pinned host dependencies.
     for line in (ROOT / "requirements.txt").read_text().splitlines():
         line = line.strip()
         if line and not line.startswith("#") and "==" not in line:
             errors.append(f"dependency is not exactly pinned: {line}")
 
+    # Stored end-to-end gradient artifact must pass its declared gate.
     artifact = json.loads((ROOT / "figures/e2e_gradient_check.json").read_text())
     if artifact.get("verdict") != "PASS" or artifact.get("best_rel_err", 1.0) >= 1e-4:
         errors.append("stored end-to-end gradient artifact does not pass the declared gate")
 
+    # Camera suite depth.
     tree = ast.parse((ROOT / "tests/test_camera.py").read_text())
     tests = [n for n in tree.body if isinstance(n, ast.FunctionDef) and n.name.startswith("test_")]
     if len(tests) < 12:
         errors.append(f"camera suite has only {len(tests)} tests; expected at least 12")
 
-    readme = (ROOT / "README.md").read_text()
-    for phrase in ("Track 05 companion", "3.6e-07", "not a second form submission"):
+    # README: Track 05 framing plus the standing gradient evidence.
+    readme_path = ROOT / "README.md"
+    readme = readme_path.read_text() if readme_path.is_file() else ""
+    for phrase in (TRACK_PHRASE, "3.6e-07"):
         if phrase.lower() not in readme.lower():
-            errors.append(f"README is missing required disclosure/evidence: {phrase}")
+            errors.append(f"README is missing required framing/evidence: {phrase}")
+
+    # Writeup must name the track explicitly.
+    writeup_path = ROOT / "writeup/WRITEUP.md"
+    writeup = writeup_path.read_text() if writeup_path.is_file() else ""
+    if TRACK_PHRASE.lower() not in writeup.lower():
+        errors.append(f"writeup does not name the track: {TRACK_PHRASE}")
+
+    # Judged docs: no companion framing, no result placeholders, no local
+    # paths, and every referenced figures/ artifact must exist.
+    for doc in _doc_files():
+        rel = doc.relative_to(ROOT)
+        text = doc.read_text(errors="replace")
+        for banned in BANNED_PHRASES:
+            if banned.lower() in text.lower():
+                errors.append(f"{rel}: contains retired framing: {banned!r}")
+        n_placeholders = len(PLACEHOLDER_RE.findall(text))
+        if n_placeholders:
+            errors.append(f"{rel}: {n_placeholders} unresolved <!-- RESULT: --> placeholder(s)")
+        for match in ABS_PATH_RE.findall(text):
+            errors.append(f"{rel}: absolute local path leaked: {match}")
+        for fig_ref in re.findall(r"figures/[A-Za-z0-9_.-]+", text):
+            if not (ROOT / fig_ref).is_file():
+                errors.append(f"{rel}: references missing artifact: {fig_ref}")
 
     if errors:
         print("SUBMISSION AUDIT: FAIL")

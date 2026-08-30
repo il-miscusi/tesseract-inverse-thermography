@@ -1,11 +1,14 @@
 # NOTICE — shared code and provenance
 
-## Relationship to our Track 02 entry
+## Relationship to the author's Track 02 repository
 
-This repository is a **companion entry, by the same author**, to
+This repository is the author's **primary hackathon entry (Track 05 —
+Differentiable graphics & rendering)**. Its coupled physics core was copied
+from the same author's earlier Track 02 work,
 [`il-miscusi/tesseract-coupled-adjoint`](https://github.com/il-miscusi/tesseract-coupled-adjoint)
-(Track 02 — Multi-physics & coupled systems). The two entries share their
-physics core, and we state that here so no judge has to discover it:
+(Multi-physics & coupled systems). That attribution stands regardless of that
+repository's visibility, and we state the shared surface here so no judge has
+to discover it:
 
 **Shared (copied from the Track 02 entry, same author, Apache-2.0):**
 
@@ -39,8 +42,8 @@ physics core, and we state that here so no judge has to discover it:
 
 The Track 02 entry contains none of the rendering, inverse-rendering or
 source-recovery work; this entry contains none of the topology-optimization,
-Enzyme-provider or closure-calibration work. They are submitted to different
-tracks on their own merits.
+Enzyme-provider or closure-calibration work. This repository stands on its
+own merits as the Track 05 submission.
 
 ## Third-party components
 

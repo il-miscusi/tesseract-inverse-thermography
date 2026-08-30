@@ -77,9 +77,9 @@
     <div class="card"><div class="big">3.6e-07</div>
       <div class="lbl">end-to-end gradient vs finite differences (pixels &rarr; q), verdict PASS</div></div>
     <div class="card"><div class="big">2220</div>
-      <div class="lbl">adjoint GMRES matvecs across 250 iterations — each one a VJP chain over three containers</div></div>
-    <div class="card"><div class="big">2&times;</div>
-      <div class="lbl">final image-space loss gap: coupled adjoint vs frozen-viscosity gradient, same data</div></div>
+      <div class="lbl">adjoint GMRES matvecs across 317 objective evaluations — each one a VJP chain over three components</div></div>
+    <div class="card"><div class="big">1.65&times;</div>
+      <div class="lbl">final recorded image-space loss gap: coupled vs frozen-viscosity model, same recovery budget</div></div>
     <div class="card"><div class="big">4</div>
       <div class="lbl">Tesseracts: Fortran Darcy flow, PyTorch viscosity closure, JAX heat transport, JAX thermal camera</div></div>
   </div>
@@ -89,14 +89,15 @@
      Fortran Darcy solver with a pen-and-paper adjoint, and a JAX heat-transport model.
      The camera renders that equilibrium to counts. Differentiating the composition uses
      only each component's VJP endpoint: GMRES solves the adjoint system matrix-free, one
-     three-container VJP chain per matvec, then one heat-transport VJP lands the gradient
-     on q.</p>
+     three-component VJP chain per matvec, then one heat-transport VJP lands the gradient
+     on q. The checked-in results use Tesseract's in-process API mode; they do not claim
+     served-container verification.</p>
   <figure><img src="assets/chain.png" alt="Differentiable chain diagram"></figure>
 
   <h2 id="results">Results: the coupling is load-bearing</h2>
-  <p>Two recoveries, identical data, identical optimizer. The only difference is whether
-     the gradient respects the two-way viscosity&ndash;flow&ndash;temperature coupling or
-     freezes it (the standard one-way approximation).</p>
+  <p>Two recoveries share data, prior, optimizer, and budget. The second uses a
+     deliberately simplified frozen-viscosity forward model and its matching derivative;
+     the comparison therefore measures model mismatch, not a gradient-only intervention.</p>
   <table>
     <tr><th>metric</th><th style="text-align:right">coupled adjoint</th><th style="text-align:right">one-way</th></tr>
     <tr><td>relative L<sub>2</sub> error of q&#770;</td><td class='num c'>0.137</td><td class='num o'>0.246</td></tr><tr><td>peak amplitude ratio (1 = ideal)</td><td class='num c'>1.115</td><td class='num o'>1.098</td></tr><tr><td>centroid shift [cells]</td><td class='num c'>0.02</td><td class='num o'>0.17</td></tr><tr><td>total recovered power ratio (1 = ideal)</td><td class='num c'>1.000</td><td class='num o'>1.017</td></tr><tr><td>final data loss [counts&sup2;]</td><td class='num c'>2.02</td><td class='num o'>3.34</td></tr><tr><td>adjoint GMRES matvecs</td><td class='num c'>2220</td><td class='num o'>0</td></tr>
@@ -104,7 +105,8 @@
   <p class="note">Grid 32&times;16 plate, 96&times;64
      sensor, &sigma;<sub>noise</sub> = 2.0 counts, seeds pinned; protocol committed
      before the run (writeup/PROTOCOL.md). Declared criterion: coupled rel_l2 < 0.5 and centroid shift < 1.5 cells (PROTOCOL.md Amendment v2, declared before this run) —
-     met: True.</p>
+     met: True. Both arms reached the declared 250-iteration
+     limit, so the table reports budget-matched endpoints rather than convergence floors.</p>
   <figure><img src="assets/recovery_convergence.png" alt="Convergence, coupled vs one-way"></figure>
   <img src="assets/recovery.gif" alt="Recovery animation" loading="lazy">
 

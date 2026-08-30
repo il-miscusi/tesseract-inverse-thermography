@@ -155,9 +155,9 @@ def main() -> None:
     <div class="card"><div class="big">{g['best_rel_err']:.1e}</div>
       <div class="lbl">end-to-end gradient vs finite differences (pixels &rarr; q), verdict {g['verdict']}</div></div>
     <div class="card"><div class="big">{rc['adjoint_matvecs_total']}</div>
-      <div class="lbl">adjoint GMRES matvecs across {b['iters']} iterations — each one a VJP chain over three containers</div></div>
-    <div class="card"><div class="big">{loss_gap:,.0f}&times;</div>
-      <div class="lbl">final image-space loss gap: coupled adjoint vs frozen-viscosity gradient, same data</div></div>
+      <div class="lbl">adjoint GMRES matvecs across {b['optimizer']['coupled']['nfev']} objective evaluations — each one a VJP chain over three components</div></div>
+    <div class="card"><div class="big">{loss_gap:,.2f}&times;</div>
+      <div class="lbl">final recorded image-space loss gap: coupled vs frozen-viscosity model, same recovery budget</div></div>
     <div class="card"><div class="big">4</div>
       <div class="lbl">Tesseracts: Fortran Darcy flow, PyTorch viscosity closure, JAX heat transport, JAX thermal camera</div></div>
   </div>
@@ -167,14 +167,15 @@ def main() -> None:
      Fortran Darcy solver with a pen-and-paper adjoint, and a JAX heat-transport model.
      The camera renders that equilibrium to counts. Differentiating the composition uses
      only each component's VJP endpoint: GMRES solves the adjoint system matrix-free, one
-     three-container VJP chain per matvec, then one heat-transport VJP lands the gradient
-     on q.</p>
+     three-component VJP chain per matvec, then one heat-transport VJP lands the gradient
+     on q. The checked-in results use Tesseract's in-process API mode; they do not claim
+     served-container verification.</p>
   <figure><img src="assets/chain.png" alt="Differentiable chain diagram"></figure>
 
   <h2 id="results">Results: the coupling is load-bearing</h2>
-  <p>Two recoveries, identical data, identical optimizer. The only difference is whether
-     the gradient respects the two-way viscosity&ndash;flow&ndash;temperature coupling or
-     freezes it (the standard one-way approximation).</p>
+  <p>Two recoveries share data, prior, optimizer, and budget. The second uses a
+     deliberately simplified frozen-viscosity forward model and its matching derivative;
+     the comparison therefore measures model mismatch, not a gradient-only intervention.</p>
   <table>
     <tr><th>metric</th><th style="text-align:right">coupled adjoint</th><th style="text-align:right">one-way</th></tr>
     {rows}
@@ -182,7 +183,8 @@ def main() -> None:
   <p class="note">Grid {b['grid'][0]}&times;{b['grid'][1]} plate, {b['sensor'][0]}&times;{b['sensor'][1]}
      sensor, &sigma;<sub>noise</sub> = {b['noise_counts']} counts, seeds pinned; protocol committed
      before the run (writeup/PROTOCOL.md). Declared criterion: {b['success_criteria']['declared']} —
-     met: {b['success_criteria']['met']}.</p>
+     met: {b['success_criteria']['met']}. Both arms reached the declared 250-iteration
+     limit, so the table reports budget-matched endpoints rather than convergence floors.</p>
   <figure><img src="assets/recovery_convergence.png" alt="Convergence, coupled vs one-way"></figure>
   {gif_html}
 

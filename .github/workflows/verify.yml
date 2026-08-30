@@ -16,10 +16,7 @@ jobs:
       - run: sudo apt-get update && sudo apt-get install -y gfortran
       - run: pip install -r requirements.txt
       - name: Compile the Fortran flow solver
-        working-directory: tesseracts/darcy-flow/fortran
-        run: |
-          gfortran -O2 -fno-fast-math -c darcy.f90 -o darcy.o
-          gfortran -O2 -fno-fast-math darcy.o main.f90 -o darcy
+        run: make build
       - run: make judge
       - name: End-to-end pixels-to-source finite differences
         env:

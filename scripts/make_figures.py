@@ -232,10 +232,10 @@ def make_chain(results, out: Path) -> None:
             weight="bold", ha="center", va="center")
 
     mv = results["results"]["coupled"]["adjoint_matvecs_total"]
-    iters = results["iters"]
+    evaluations = results["optimizer"]["coupled"]["nfev"]
     ax.text(39, 0.6,
-            f"{mv} adjoint matvecs over {iters} optimizer iterations "
-            f"(≈{mv / iters:.1f} per gradient) · no framework ever traces the whole chain",
+            f"{mv} adjoint matvecs over {evaluations} objective evaluations "
+            f"(≈{mv / evaluations:.1f} per gradient) · no framework ever traces the whole chain",
             ha="center", fontsize=7.6, color=MUTED)
     ax.set_title("The gradient no single AD framework can trace", fontsize=12.5, pad=14)
     fig.savefig(out)
@@ -255,16 +255,16 @@ def make_convergence(fields, results, out: Path) -> None:
                                    gridspec_kw={"width_ratios": [1.6, 1]})
     ax1.semilogy(hc, color=ACCENT, lw=1.6, label="coupled adjoint")
     ax1.semilogy(ho, color=ACCENT2, lw=1.6, label="one-way (frozen viscosity)")
-    ax1.set_xlabel("Adam iteration")
-    ax1.set_ylabel("objective  $\\frac{1}{2}$ mean$(r^2)$ + smoothness  [counts$^2$]")
+    ax1.set_xlabel("L-BFGS-B objective evaluation")
+    ax1.set_ylabel("objective  $\\frac{1}{2}$ mean$(r^2)$ + TV prior  [counts$^2$]")
     ax1.grid(True, alpha=0.5)
     ax1.legend(loc="upper right")
     gap = ro["final_data_loss"] / rc["final_data_loss"]
-    ax1.annotate(f"final data loss:\n{gap:.0f}× apart",
+    ax1.annotate(f"final recorded data loss:\n{gap:.2f}× apart",
                  xy=(len(hc) - 1, hc[-1]), xytext=(0.55, 0.45),
                  textcoords="axes fraction", fontsize=8, color=INK,
                  arrowprops=dict(arrowstyle="-", color=MUTED, lw=0.8))
-    ax1.set_title("Same data, same optimizer — only the physics in the gradient differs")
+    ax1.set_title("Coupled model vs frozen-viscosity model — same data and recovery setup")
 
     labels = ["rel $L_2$", "centroid shift\n(cells)", "total power\nratio"]
     cv = [rc["rel_l2"], rc["centroid_shift_cells"], rc["total_power_ratio"]]
@@ -279,7 +279,7 @@ def make_convergence(fields, results, out: Path) -> None:
     ax2.grid(True, axis="y", alpha=0.5)
     ax2.legend(fontsize=7.5)
     ax2.set_title("Recovery error by arm")
-    fig.suptitle("Recovering $q$ from one image: coupled vs one-way gradients",
+    fig.suptitle("Recovering $q$ from one image: coupled vs frozen-viscosity models",
                  fontsize=12, y=1.03)
     fig.tight_layout()
     fig.savefig(out)

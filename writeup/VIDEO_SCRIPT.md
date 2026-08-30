@@ -51,7 +51,7 @@ arrows right to left. Overlay the two equations when the VO reaches them.
 > here is what actually runs. The camera's VJP pulls the loss back to the
 > temperature field. The implicit function theorem turns the fixed point
 > into a linear adjoint system, solved matrix-free with GMRES — every
-> matvec is a chain of three VJPs across three containers: JAX, Fortran,
+> matvec is a chain of three component VJPs: JAX, Fortran,
 > PyTorch. One final heat-transport VJP lands on q.
 > No framework ever sees the whole chain. Only VJPs cross the boundaries.
 > We checked the composition against finite differences end to end:
@@ -82,12 +82,15 @@ through renderer + coupled physics".
 **VO:**
 > Does the multiphysics actually matter? We ran the identical recovery a
 > second time with the industry-standard shortcut: viscosity frozen, one-way
-> physics — same data, same optimizer, only the gradient changed.
-> The coupled adjoint reaches the two-count noise floor; the one-way fit stays
+> physics — same data, prior, optimizer, and budget, but a deliberately
+> simplified forward model and its matching derivative.
+> The coupled arm reaches the two-count noise floor; the frozen-viscosity arm stays
 > 65 percent above it. It recovers the source with relative L-two error 0.1370
 > against 0.2457 one-way — 1.79 times worse — while ignoring the coupling
 > biases total recovered power 1.7 percent high.
-> The protocol, seeds, and success criteria were committed before the run —
+> Both runs reached their declared iteration limit, so these are honest
+> budget-matched endpoints, not convergence claims. The protocol, seeds, and
+> success criteria were committed before the run —
 > what you see is what the pre-registration produced.
 
 ## Shot 6 — Close (4:10–4:40)

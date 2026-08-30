@@ -145,10 +145,11 @@ data, seeds, and two-arm design are unchanged. Final numbers, from
 - Coupled arm: relative L2 error **0.1370**, amplitude ratio 1.115, final
   data loss 2.022 against a noise floor of 2.0.
 - Coupled centroid shift: **0.02 cells**.
-- One-way arm: relative L2 error **0.2457** (1.79x the coupled error),
-  centroid shift 0.17 cells, final data loss 3.339 — a converged fit that
-  stays 65% above the noise floor because its forward model is wrong for the
-  data.
+- Frozen-viscosity arm: relative L2 error **0.2457** (1.79x the coupled
+  error), centroid shift 0.17 cells, final recorded data loss 3.339, 65%
+  above the noise floor. Both arms reached the 250-iteration L-BFGS-B limit;
+  these are budget-matched endpoints, not claimed convergence floors. This
+  comparison changes the forward model and its derivative together.
 - Total-power ratio: coupled **1.000**, one-way 1.017.
 - Verdict: the amended pre-declared criteria (coupled rel L2 < 0.5 AND
   centroid shift < 1.5 cells) **PASS**; the end-to-end FD gradient gate was

@@ -24,6 +24,13 @@ PLACEHOLDER_RE = re.compile(
 )
 ABS_PATH_RE = re.compile(r"/Users/[A-Za-z0-9_.-]+/")
 BANNED_PHRASES = ("companion", "not a second form submission")
+FALSE_CLAIMS = (
+    "only the gradient changed",
+    "only the physics in the gradient differs",
+    "converged data loss",
+    "a converged fit",
+    "model-mismatch floor",
+)
 
 
 def _doc_files() -> list[Path]:
@@ -62,6 +69,19 @@ def main() -> None:
     if artifact.get("verdict") != "PASS" or artifact.get("best_rel_err", 1.0) >= 1e-4:
         errors.append("stored end-to-end gradient artifact does not pass the declared gate")
 
+    # Experiment metadata is the authority for optimizer and stopping claims.
+    b2_path = ROOT / "figures/experiment_b_v2.json"
+    if not b2_path.is_file():
+        errors.append("missing required file: figures/experiment_b_v2.json")
+        b2 = {}
+    else:
+        b2 = json.loads(b2_path.read_text())
+        if b2.get("optimizer", {}).get("method") != "L-BFGS-B":
+            errors.append("experiment B v2 optimizer is not L-BFGS-B")
+        for arm in ("coupled", "one_way"):
+            if arm not in b2.get("optimizer", {}):
+                errors.append(f"experiment B v2 missing optimizer metadata for {arm}")
+
     # Camera suite depth.
     tree = ast.parse((ROOT / "tests/test_camera.py").read_text())
     tests = [n for n in tree.body if isinstance(n, ast.FunctionDef) and n.name.startswith("test_")]
@@ -89,6 +109,9 @@ def main() -> None:
         for banned in BANNED_PHRASES:
             if banned.lower() in text.lower():
                 errors.append(f"{rel}: contains retired framing: {banned!r}")
+        for false_claim in FALSE_CLAIMS:
+            if false_claim.lower() in text.lower():
+                errors.append(f"{rel}: contains claim contradicted by artifacts: {false_claim!r}")
         n_placeholders = len(PLACEHOLDER_RE.findall(text))
         if n_placeholders:
             errors.append(f"{rel}: {n_placeholders} unresolved result placeholder(s)")
@@ -98,6 +121,11 @@ def main() -> None:
             ref = ROOT / fig_ref
             if not (ref.is_file() or ref.is_dir()):
                 errors.append(f"{rel}: references missing artifact: {fig_ref}")
+
+    figure_source = (ROOT / "scripts/make_figures.py").read_text()
+    for stale_label in ("Adam iteration", "{gap:.0f}× apart"):
+        if stale_label in figure_source:
+            errors.append(f"make_figures.py contains stale label: {stale_label!r}")
 
     if errors:
         print("SUBMISSION AUDIT: FAIL")

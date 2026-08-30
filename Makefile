@@ -1,7 +1,9 @@
 # Tesseract Hackathon 2026 - Track 05 primary entry
-.PHONY: judge test verify experiment-a experiment-b experiment-b-v2 audit figures animation landing
+.PHONY: build judge test verify experiment-a experiment-b experiment-b-v2 audit figures animation landing
 
 PYTHON ?= python3
+FORTRAN_DIR := tesseracts/darcy-flow/fortran
+FORTRAN_BIN := $(FORTRAN_DIR)/darcy
 
 # Visual-layer artifact inputs. The judged surface defaults to the final v2 run;
 # v1 remains available by overriding FIELDS and RESULTS explicitly.
@@ -22,7 +24,11 @@ animation:
 landing:
 	"$(PYTHON)" scripts/make_landing.py --results $(RESULTS) --expa $(EXPA)
 
-judge:
+build:
+	gfortran -O2 -fno-fast-math -c $(FORTRAN_DIR)/darcy.f90 -o $(FORTRAN_DIR)/darcy.o
+	gfortran -O2 -fno-fast-math $(FORTRAN_DIR)/darcy.o $(FORTRAN_DIR)/main.f90 -o $(FORTRAN_BIN)
+
+judge: build
 	PYTHON_BIN="$(PYTHON)" bash scripts/judge_demo.sh
 
 test:

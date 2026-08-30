@@ -1,5 +1,5 @@
 # Tesseract Hackathon 2026 - Track 05 primary entry
-.PHONY: build judge test verify experiment-a experiment-b experiment-b-v2 audit figures animation landing
+.PHONY: build judge test verify experiment-a experiment-b experiment-b-v2 experiment-c audit figures animation landing
 
 PYTHON ?= python3
 FORTRAN_DIR := tesseracts/darcy-flow/fortran
@@ -49,6 +49,11 @@ experiment-b:
 experiment-b-v2:
 	COUPLER_INPROCESS=1 DARCY_SOLVER_BIN="$(CURDIR)/tesseracts/darcy-flow/fortran/darcy" \
 	"$(PYTHON)" scripts/experiment_b_v2.py
+
+experiment-c:
+	COUPLER_INPROCESS=1 DARCY_SOLVER_BIN="$(CURDIR)/tesseracts/darcy-flow/fortran/darcy" \
+	OMP_NUM_THREADS=1 \
+	"$(PYTHON)" scripts/experiment_c_renderer_necessity.py
 
 audit:
 	"$(PYTHON)" scripts/submission_audit.py

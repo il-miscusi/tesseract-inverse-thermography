@@ -76,9 +76,9 @@
   <div class="cards">
     <div class="card"><div class="big">3.6e-07</div>
       <div class="lbl">end-to-end gradient vs finite differences (pixels &rarr; q), verdict PASS</div></div>
-    <div class="card"><div class="big">1773</div>
+    <div class="card"><div class="big">2220</div>
       <div class="lbl">adjoint GMRES matvecs across 250 iterations — each one a VJP chain over three containers</div></div>
-    <div class="card"><div class="big">25&times;</div>
+    <div class="card"><div class="big">2&times;</div>
       <div class="lbl">final image-space loss gap: coupled adjoint vs frozen-viscosity gradient, same data</div></div>
     <div class="card"><div class="big">4</div>
       <div class="lbl">Tesseracts: Fortran Darcy flow, PyTorch viscosity closure, JAX heat transport, JAX thermal camera</div></div>
@@ -99,12 +99,12 @@
      freezes it (the standard one-way approximation).</p>
   <table>
     <tr><th>metric</th><th style="text-align:right">coupled adjoint</th><th style="text-align:right">one-way</th></tr>
-    <tr><td>relative L<sub>2</sub> error of q&#770;</td><td class='num c'>0.971</td><td class='num o'>0.981</td></tr><tr><td>peak amplitude ratio (1 = ideal)</td><td class='num c'>0.030</td><td class='num o'>0.032</td></tr><tr><td>centroid shift [cells]</td><td class='num c'>6.85</td><td class='num o'>6.93</td></tr><tr><td>total recovered power ratio (1 = ideal)</td><td class='num c'>1.041</td><td class='num o'>1.364</td></tr><tr><td>final data loss [counts&sup2;]</td><td class='num c'>1.9e+03</td><td class='num o'>4.74e+04</td></tr><tr><td>adjoint GMRES matvecs</td><td class='num c'>1773</td><td class='num o'>0</td></tr>
+    <tr><td>relative L<sub>2</sub> error of q&#770;</td><td class='num c'>0.137</td><td class='num o'>0.246</td></tr><tr><td>peak amplitude ratio (1 = ideal)</td><td class='num c'>1.115</td><td class='num o'>1.098</td></tr><tr><td>centroid shift [cells]</td><td class='num c'>0.02</td><td class='num o'>0.17</td></tr><tr><td>total recovered power ratio (1 = ideal)</td><td class='num c'>1.000</td><td class='num o'>1.017</td></tr><tr><td>final data loss [counts&sup2;]</td><td class='num c'>2.02</td><td class='num o'>3.34</td></tr><tr><td>adjoint GMRES matvecs</td><td class='num c'>2220</td><td class='num o'>0</td></tr>
   </table>
   <p class="note">Grid 32&times;16 plate, 96&times;64
      sensor, &sigma;<sub>noise</sub> = 2.0 counts, seeds pinned; protocol committed
-     before the run (writeup/PROTOCOL.md). Declared criterion: coupled rel_l2 < 0.5 and centroid shift < 1.5 cells —
-     met: False.</p>
+     before the run (writeup/PROTOCOL.md). Declared criterion: coupled rel_l2 < 0.5 and centroid shift < 1.5 cells (PROTOCOL.md Amendment v2, declared before this run) —
+     met: True.</p>
   <figure><img src="assets/recovery_convergence.png" alt="Convergence, coupled vs one-way"></figure>
   <img src="assets/recovery.gif" alt="Recovery animation" loading="lazy">
 

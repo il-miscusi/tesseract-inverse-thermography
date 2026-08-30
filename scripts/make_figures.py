@@ -89,9 +89,23 @@ def make_hero(fields, results, out: Path) -> None:
     fig, axes = plt.subplots(1, 4, figsize=(13.6, 3.4))
     qmax = max(q_true.max(), q_rec.max())
 
+    # The true blobs sit in the chip band at the base of the plate
+    # (two_blob_source y_frac 0.06): crop both source panels to that band so
+    # the panel shows structure, not empty domain.  The crop is labelled.
+    band = max(4, int(round(0.375 * q_true.shape[1])))
+    band_frac = band / q_true.shape[1]
+
+    def show_band(ax, f, **kw):
+        im = ax.imshow(np.asarray(f)[:, :band].T, origin="lower",
+                       cmap=figstyle.CMAP_SOURCE, aspect="auto",
+                       extent=[0, 1, 0, band_frac], interpolation="nearest",
+                       **kw)
+        ax.set_ylim(0, band_frac)
+        return im
+
     ax = axes[0]
-    im = show_field(ax, q_true, figstyle.CMAP_SOURCE, vmin=0, vmax=qmax)
-    ax.set_title("hidden heat source  $q(x,y)$", pad=8)
+    im = show_band(ax, q_true, vmin=0, vmax=qmax)
+    ax.set_title("hidden heat source  $q(x,y)$ · chip band", pad=8)
     colorbar(fig, im, ax, "MW m$^{-3}$")
 
     ax = axes[1]
@@ -119,11 +133,11 @@ def make_hero(fields, results, out: Path) -> None:
     colorbar(fig, im, ax, "counts")
 
     ax = axes[3]
-    # its own scale: the recovery is judged by shape and location, and a
-    # shared scale would hide a low-amplitude reconstruction entirely
-    im = show_field(ax, q_rec, figstyle.CMAP_SOURCE, vmin=0)
+    # shared scale with the truth panel: the v2 recovery holds amplitude
+    # (ratio ~1.1), so the honest comparison is also the strongest one
+    im = show_band(ax, q_rec, vmin=0, vmax=qmax)
     r = results["results"]["coupled"]
-    ax.set_title("recovered source (coupled adjoint, own scale)", pad=8)
+    ax.set_title("recovered source (coupled adjoint) · chip band", pad=8)
     ax.text(0.03, 0.05,
             f"rel $L_2$ {r['rel_l2']:.2f} · centroid {r['centroid_shift_cells']:.1f} cells",
             transform=ax.transAxes, fontsize=7.5, color=INK,

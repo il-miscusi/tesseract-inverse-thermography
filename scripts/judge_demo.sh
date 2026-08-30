@@ -24,6 +24,7 @@ run_gate() {
 
 run_gate "submission surface" "$PYTHON_BIN" scripts/submission_audit.py
 run_gate "camera tests" "$PYTHON_BIN" -m pytest -q tests/test_camera.py
+run_gate "thermography tests" "$PYTHON_BIN" -m pytest -q tests/test_thermography.py
 run_gate "Python syntax" "$PYTHON_BIN" -m compileall -q coupler scripts tests tesseracts/thermal-camera
 
 printf '\n%-22s %-6s %s\n' "GATE" "RESULT" "DETAIL"

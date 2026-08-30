@@ -162,6 +162,28 @@ def softplus_grad(z: np.ndarray) -> np.ndarray:
     return 1.0 / (1.0 + np.exp(-z))
 
 
+def total_variation_penalty(q_n: np.ndarray, eps: float = 1e-6) -> tuple[float, np.ndarray]:
+    """Smoothed isotropic TV: mean(sqrt(dx^2 + dy^2 + eps^2)) and its gradient.
+
+    Edge-preserving prior for hotspot recovery: L2-on-Laplacian penalises the
+    sharp rim of a real hotspot quadratically, TV only linearly, so blobs stay
+    blobs.  Forward differences with replicated last row/column (zero-gradient
+    edge); the gradient is the exact transpose of those differences.
+    """
+    dx = np.diff(q_n, axis=0, append=q_n[-1:, :])
+    dy = np.diff(q_n, axis=1, append=q_n[:, -1:])
+    mag = np.sqrt(dx**2 + dy**2 + eps**2)
+    val = float(np.mean(mag))
+    wx = dx / mag
+    wy = dy / mag
+    grad = np.zeros_like(q_n)
+    grad[:-1, :] -= wx[:-1, :]
+    grad[1:, :] += wx[:-1, :]
+    grad[:, :-1] -= wy[:, :-1]
+    grad[:, 1:] += wy[:, :-1]
+    return val, grad / q_n.size
+
+
 @dataclass
 class Adam:
     """Plain Adam on a flat numpy array (small, dependency-free)."""

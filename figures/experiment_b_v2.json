@@ -1,0 +1,74 @@
+{
+  "protocol": "writeup/PROTOCOL.md Amendment v2 (v1 failure kept in figures/experiment_b.json)",
+  "grid": [
+    32,
+    16
+  ],
+  "sensor": [
+    96,
+    64
+  ],
+  "iters": 250,
+  "prior": {
+    "type": "tv",
+    "lambda_tv": 0.003
+  },
+  "init_frac": 0.05,
+  "optimizer": {
+    "method": "L-BFGS-B",
+    "maxiter": 250,
+    "coupled": {
+      "nit": 250,
+      "nfev": 317,
+      "status": 1,
+      "message": "STOP: TOTAL NO. OF ITERATIONS REACHED LIMIT"
+    },
+    "one_way": {
+      "nit": 250,
+      "nfev": 316,
+      "status": 1,
+      "message": "STOP: TOTAL NO. OF ITERATIONS REACHED LIMIT"
+    }
+  },
+  "q_scale": 150000000.0,
+  "noise_counts": 2.0,
+  "noise_seed": 42,
+  "problem_seed": 0,
+  "camera": {
+    "sigma": 1.2,
+    "gain": 25.0,
+    "offset": 500.0
+  },
+  "results": {
+    "coupled": {
+      "rel_l2": 0.13699467025433842,
+      "amplitude_ratio": 1.1147043548118518,
+      "centroid_shift_cells": 0.018064296073346937,
+      "total_power_ratio": 0.9999819236306332,
+      "final_data_loss": 2.0220833212005105,
+      "adjoint_matvecs_total": 2220
+    },
+    "one_way": {
+      "rel_l2": 0.2456617729485171,
+      "amplitude_ratio": 1.0983204857079436,
+      "centroid_shift_cells": 0.16810257998830244,
+      "total_power_ratio": 1.016700170983005,
+      "final_data_loss": 3.338921109696056,
+      "adjoint_matvecs_total": 0
+    }
+  },
+  "bias": {
+    "rel_l2_coupled": 0.13699467025433842,
+    "rel_l2_one_way": 0.2456617729485171,
+    "one_way_over_coupled_l2": 1.7932213895068472,
+    "amplitude_ratio_coupled": 1.1147043548118518,
+    "amplitude_ratio_one_way": 1.0983204857079436,
+    "total_power_ratio_coupled": 0.9999819236306332,
+    "total_power_ratio_one_way": 1.016700170983005
+  },
+  "success_criteria": {
+    "declared": "coupled rel_l2 < 0.5 and centroid shift < 1.5 cells (PROTOCOL.md Amendment v2, declared before this run)",
+    "met": true
+  },
+  "seconds": 1229.4139609336853
+}

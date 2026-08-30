@@ -1,0 +1,34 @@
+measurement: T in [312.47, 343.24] K, counts in [1670, 2636]
+arm 1: COUPLED
+    ev    1  loss 3.362385e+04  data 3.362385e+04  fp_iters 15
+    ev   26  loss 2.640803e+02  data 2.640802e+02  fp_iters 6
+    ev   51  loss 1.531017e+01  data 1.531012e+01  fp_iters 6
+    ev   76  loss 2.812361e+00  data 2.812292e+00  fp_iters 5
+    ev  101  loss 2.532512e+00  data 2.532438e+00  fp_iters 5
+    ev  126  loss 2.152832e+00  data 2.152756e+00  fp_iters 5
+    ev  151  loss 2.088143e+00  data 2.088067e+00  fp_iters 4
+    ev  176  loss 2.073743e+00  data 2.073669e+00  fp_iters 4
+    ev  201  loss 2.042834e+00  data 2.042760e+00  fp_iters 5
+    ev  226  loss 2.034663e+00  data 2.034589e+00  fp_iters 5
+    ev  251  loss 2.032826e+00  data 2.032751e+00  fp_iters 4
+    ev  276  loss 2.027419e+00  data 2.027346e+00  fp_iters 5
+    ev  301  loss 2.022887e+00  data 2.022813e+00  fp_iters 5
+    L-BFGS-B: 250 iterations, 317 evaluations, status 1 (STOP: TOTAL NO. OF ITERATIONS REACHED LIMIT)
+arm 2: ONE-WAY (frozen viscosity)
+    ev    1  loss 2.063891e+05  data 2.063891e+05  fp_iters 2
+    ev   26  loss 5.460371e+02  data 5.460371e+02  fp_iters 2
+    ev   51  loss 5.131788e+01  data 5.131784e+01  fp_iters 2
+    ev   76  loss 1.648286e+01  data 1.648281e+01  fp_iters 2
+    ev  101  loss 6.063503e+00  data 6.063439e+00  fp_iters 2
+    ev  126  loss 3.887461e+00  data 3.887386e+00  fp_iters 2
+    ev  151  loss 3.687591e+00  data 3.687514e+00  fp_iters 2
+    ev  176  loss 3.534661e+00  data 3.534588e+00  fp_iters 2
+    ev  201  loss 3.450952e+00  data 3.450881e+00  fp_iters 2
+    ev  226  loss 3.429078e+00  data 3.429008e+00  fp_iters 2
+    ev  251  loss 3.426928e+00  data 3.426858e+00  fp_iters 2
+    ev  276  loss 3.407910e+00  data 3.407840e+00  fp_iters 2
+    ev  301  loss 3.380284e+00  data 3.380213e+00  fp_iters 2
+    L-BFGS-B: 250 iterations, 316 evaluations, status 1 (STOP: TOTAL NO. OF ITERATIONS REACHED LIMIT)
+coupled : rel_l2 0.1370  amp 1.115  centroid shift 0.02 cells  power 1.000
+one_way : rel_l2 0.2457  amp 1.098  centroid shift 0.17 cells  power 1.017
+wrote /Users/usi/Documents/Documents-MacBook/Personal Projects/tesseract-inverse-thermography/figures/experiment_b_v2.json  (1229s)

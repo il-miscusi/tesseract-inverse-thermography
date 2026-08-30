@@ -37,12 +37,14 @@ def main() -> None:
     ap.add_argument("--expa", default="figures/experiment_a.json")
     ap.add_argument("--gradcheck", default="figures/e2e_gradient_check.json")
     ap.add_argument("--renderer-results", default="figures/experiment_c_renderer.json")
+    ap.add_argument("--container-check", default="figures/container_e2e_gradient_check.json")
     args = ap.parse_args()
 
     b = json.loads((ROOT / args.results).read_text())
     a = json.loads((ROOT / args.expa).read_text())
     g = json.loads((ROOT / args.gradcheck).read_text())
     c = json.loads((ROOT / args.renderer_results).read_text())
+    container = json.loads((ROOT / args.container_check).read_text())
     rc, ro = b["results"]["coupled"], b["results"]["one_way"]
 
     ASSETS.mkdir(parents=True, exist_ok=True)
@@ -163,8 +165,8 @@ def main() -> None:
       <div class="lbl">adjoint GMRES matvecs across {b['optimizer']['coupled']['nfev']} objective evaluations — each one a VJP chain over three components</div></div>
     <div class="card"><div class="big">{loss_gap:,.2f}&times;</div>
       <div class="lbl">final recorded image-space loss gap: coupled vs frozen-viscosity model, same recovery budget</div></div>
-    <div class="card"><div class="big">4</div>
-      <div class="lbl">Tesseracts: Fortran Darcy flow, PyTorch viscosity closure, JAX heat transport, JAX thermal camera</div></div>
+    <div class="card"><div class="big">{container['best_rel_err']:.1e}</div>
+      <div class="lbl">finite-difference error through four served containers · {container['seconds']:.0f} s · {container['verdict']}</div></div>
   </div>
 
   <h2 id="chain">The gradient no single framework can trace</h2>
@@ -173,8 +175,9 @@ def main() -> None:
      The camera renders that equilibrium to counts. Differentiating the composition uses
      only each component's VJP endpoint: GMRES solves the adjoint system matrix-free, one
      three-component VJP chain per matvec, then one heat-transport VJP lands the gradient
-     on q. The checked-in results use Tesseract's in-process API mode; they do not claim
-     served-container verification.</p>
+     on q. A separate receipt builds and serves all four images, then verifies the complete
+     derivative through real HTTP/container boundaries at {container['best_rel_err']:.1e}
+     relative error.</p>
   <figure><img src="assets/chain.png" alt="Differentiable chain diagram"></figure>
 
   <h2 id="results">Results: the coupling is load-bearing</h2>

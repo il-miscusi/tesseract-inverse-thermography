@@ -46,10 +46,11 @@ framework's tape could record it even in principle. Tesseract's contract — eac
 component publishes `apply` and `vector_jacobian_product` behind a typed
 interface — is what lets a matrix-free implicit-function-theorem adjoint treat
 a hand-written Fortran adjoint, two ML tapes, and a rendering VJP as
-interchangeable parts of one chain rule. The verified reproduction path uses
-Tesseract's in-process API mode; served-container verification is tracked
-separately and is not implied by the results below. Remove the Tesseract
-contract and you do not get a
+interchangeable parts of one chain rule. The fast judge and CI gates use
+Tesseract's in-process API mode; the separate `make verify-containers` gate
+builds and serves all four images, then finite-differences the complete
+pixels-to-source derivative across the real HTTP/container boundaries. Remove
+the Tesseract contract and you do not get a
 slower version of this system; you get four gradients that cannot be composed.
 The pixels→source derivative simply stops existing.
 
@@ -72,6 +73,11 @@ equilibrium. On the declared 16×8 physics grid and 48×32 sensor:
 | best directional relative error | **3.6e-07** |
 | required threshold | 1e-04 |
 | verdict | **PASS** |
+
+The independent served-container receipt also passes on an 8×4 / 24×16 smoke
+composition at **1.14e-07** relative error in 67 seconds. It records all four
+image IDs, execution mode, and source commit in
+[`figures/container_e2e_gradient_check.json`](figures/container_e2e_gradient_check.json).
 
 The fast suite adds 18 independent gates: Planck monotonicity,
 emissivity/reflection limits, homography round trips, bilinear sampling, PSF
@@ -151,13 +157,15 @@ thermographic inspection.
 
 ## Reproduce
 
-Requires Python 3.10+ and `gfortran`; Docker is optional because every
-component can run from its `tesseract_api.py` in-process.
+Requires Python 3.10+ and `gfortran`; Docker is needed only for the explicit
+served-container proof because every component can also run from its
+`tesseract_api.py` in-process.
 
 ```bash
 pip install -r requirements.txt
 make judge         # submission audit + 18 fast gates, one PASS/FAIL verdict
 make verify        # rerun the pixels-to-q finite-difference check
+make verify-containers # build/serve 4 images + FD across real boundaries
 make experiment-a  # camera self-calibration
 make experiment-b-v2 # amended source recovery through the coupled equilibrium
 make experiment-c  # renderer necessity with 64x32 truth / 32x16 inversion

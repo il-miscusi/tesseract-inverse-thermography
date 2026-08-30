@@ -51,11 +51,13 @@ arrows right to left. Overlay the two equations when the VO reaches them.
 > here is what actually runs. The camera's VJP pulls the loss back to the
 > temperature field. The implicit function theorem turns the fixed point
 > into a linear adjoint system, solved matrix-free with GMRES — every
-> matvec is a chain of three component VJPs: JAX, Fortran,
+> matvec is a chain of three container VJPs: JAX, Fortran,
 > PyTorch. One final heat-transport VJP lands on q.
 > No framework ever sees the whole chain. Only VJPs cross the boundaries.
 > We checked the composition against finite differences end to end:
 > relative error 3.6 times 10 to the minus 7.
+> We also built and served all four images and repeated the complete check
+> across real container boundaries: 1.14 times 10 to the minus 7.
 
 ## Shot 4 — Live recovery (2:00–3:10)
 

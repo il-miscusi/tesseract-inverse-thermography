@@ -17,6 +17,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import subprocess
 import sys
 import time
 from pathlib import Path
@@ -107,6 +108,25 @@ def main() -> None:
     print(f"\n>>> BEST RELATIVE ERROR: {best:.3e}")
     print(f">>> {verdict}")
 
+    served = not os.environ.get("COUPLER_INPROCESS", "").strip()
+    images = {
+        "darcy": "darcy-flow:latest",
+        "heat": "heat-transport:latest",
+        "closure": "viscosity-closure:latest",
+        "camera": "thermal-camera:latest",
+    }
+    image_ids = {}
+    if served:
+        for name, image in images.items():
+            image_ids[name] = subprocess.check_output(
+                ["docker", "image", "inspect", image, "--format={{.Id}}"],
+                text=True,
+            ).strip()
+    source_commit = subprocess.check_output(
+        ["git", "rev-parse", "HEAD"], cwd=Path(__file__).resolve().parents[1],
+        text=True,
+    ).strip()
+
     out = Path(__file__).resolve().parents[1] / args.out
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(json.dumps({
@@ -115,17 +135,10 @@ def main() -> None:
         "seed": args.seed,
         "coupling_scale": args.coupling_scale,
         "one_way": args.one_way,
-        "execution_mode": (
-            "served_containers"
-            if not os.environ.get("COUPLER_INPROCESS", "").strip()
-            else "in_process_api"
-        ),
-        "images": {
-            "darcy": "darcy-flow:latest",
-            "heat": "heat-transport:latest",
-            "closure": "viscosity-closure:latest",
-            "camera": "thermal-camera:latest",
-        },
+        "execution_mode": "served_containers" if served else "in_process_api",
+        "images": images,
+        "image_ids": image_ids,
+        "source_commit": source_commit,
         "loss": loss0,
         "grad_norm": float(np.linalg.norm(grad_q)),
         "adjoint_matvecs": info["adjoint_matvecs"],

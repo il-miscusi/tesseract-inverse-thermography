@@ -211,9 +211,13 @@ pool pyrometry in additive manufacturing and to active-thermography NDT.
 
 ## 8. Reproducibility
 
-`make judge` runs the submission audit, all 18 gates, and a syntax sweep with
-one PASS/FAIL verdict; `make verify` reruns the end-to-end finite-difference
-gate; `make experiment-a` / `make experiment-b` regenerate the artifacts. CI
-compiles the Fortran solver from source and runs the judged surface on every
-push. All dependencies are pinned exactly. Provenance of the physics core
-copied from the same author's Track 02 repository is recorded in `NOTICE.md`.
+`make judge` runs the submission audit, all fast gates, and a syntax sweep with
+one PASS/FAIL verdict; `make verify` reruns the in-process end-to-end
+finite-difference gate. `make verify-containers` builds all four Tesseract
+images, serves them, and repeats a small complete pixels-to-source gradient
+check through the HTTP/container boundaries: best relative error 1.14e-07,
+PASS in 67 seconds. Its JSON receipt records image IDs and source commit. CI
+compiles the Fortran solver from source and runs the fast judged surface on
+every push. All dependencies are pinned exactly. Provenance of the physics
+core copied from the same author's Track 02 repository is recorded in
+`NOTICE.md`.

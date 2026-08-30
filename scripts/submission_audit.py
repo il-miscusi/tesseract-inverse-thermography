@@ -48,6 +48,7 @@ def main() -> None:
         "figures/e2e_gradient_check.json",
         "figures/experiment_a.json", "figures/experiment_b.json",
         "figures/experiment_c_renderer.json", "figures/renderer_necessity.png",
+        "figures/container_e2e_gradient_check.json",
         "tests/test_camera.py", ".github/workflows/verify.yml",
     )
     for relative in required:
@@ -69,6 +70,19 @@ def main() -> None:
     artifact = json.loads((ROOT / "figures/e2e_gradient_check.json").read_text())
     if artifact.get("verdict") != "PASS" or artifact.get("best_rel_err", 1.0) >= 1e-4:
         errors.append("stored end-to-end gradient artifact does not pass the declared gate")
+
+    container_artifact = json.loads(
+        (ROOT / "figures/container_e2e_gradient_check.json").read_text()
+    )
+    if container_artifact.get("execution_mode") != "served_containers":
+        errors.append("container gradient receipt did not run in served-container mode")
+    if (container_artifact.get("verdict") != "PASS"
+            or container_artifact.get("best_rel_err", 1.0) >= 1e-4):
+        errors.append("served-container gradient receipt does not pass")
+    if set(container_artifact.get("image_ids", {})) != {
+        "darcy", "heat", "closure", "camera"
+    }:
+        errors.append("served-container receipt is missing image IDs")
 
     # Experiment metadata is the authority for optimizer and stopping claims.
     b2_path = ROOT / "figures/experiment_b_v2.json"

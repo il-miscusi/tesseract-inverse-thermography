@@ -1,0 +1,5 @@
+[S2-lbfgs] ev   25 loss 1.4021e+02 rel_l2 0.6172 amp 0.567 (140s)
+[S2-lbfgs] ev   50 loss 8.2564e+00 rel_l2 0.2777 amp 0.926 (219s)
+[S2-lbfgs] ev   75 loss 9.4498e-01 rel_l2 0.2509 amp 1.199 (288s)
+[S2-lbfgs] ev  100 loss 2.4150e-01 rel_l2 0.1095 amp 1.051 (361s)
+[S2-lbfgs] ev  125 loss 1.3935e-01 rel_l2 0.0795 amp 1.006 (435s)

@@ -1,0 +1,5 @@
+[S3-noise] ev   25 loss 1.1664e+02 rel_l2 0.6429 amp 0.646 (143s)
+[S3-noise] ev   50 loss 2.3111e+01 rel_l2 0.3664 amp 0.873 (214s)
+[S3-noise] ev   75 loss 5.1308e+00 rel_l2 0.3856 amp 1.382 (308s)
+[S3-noise] ev  100 loss 2.9306e+00 rel_l2 0.1167 amp 1.096 (373s)
+[S3-noise] ev  125 loss 2.1653e+00 rel_l2 0.0701 amp 0.989 (458s)

@@ -1,0 +1,8 @@
+[S1-tv] it    0 data 1.6655e+04 rel_l2 0.9804 amp 0.029 cen 3.48 (90s)
+[S1-tv] it   50 data 1.3114e+03 rel_l2 0.8276 amp 0.180 cen 2.10 (339s)
+[S1-tv] it  100 data 2.9380e+02 rel_l2 0.6104 amp 0.664 cen 1.18 (588s)
+[S1-tv] it  150 data 1.5856e+02 rel_l2 0.6039 amp 0.899 cen 0.91 (803s)
+[S1-tv] it  200 data 1.2319e+02 rel_l2 0.6017 amp 0.960 cen 0.81 (953s)
+[S1-tv] it  250 data 1.0988e+02 rel_l2 0.5942 amp 0.970 cen 0.77 (1113s)
+[S1-tv] it  299 data 1.0391e+02 rel_l2 0.5884 amp 0.969 cen 0.74 (1253s)
+[S1-tv] FINAL data 1.0391e+02 rel_l2 0.5884 amp 0.969 cen 0.74 power 1.009 (1253s)

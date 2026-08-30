@@ -102,8 +102,8 @@ against a declared 10⁻⁴ threshold. No experiment ran before this gate passed
 The protocol (`writeup/PROTOCOL.md`) was committed before any reported run and
 fixes grids, seeds, noise levels, priors, optimizer settings, and success
 criteria. Its reporting rule binds every number below to a JSON artifact in
-`figures/` written by the producing script. Deviations are recorded in the
-protocol's own Deviations section.
+`figures/` written by the producing script. The original run is governed by
+the protocol's Deviations section; the rerun is declared under Amendment v2.
 
 ### Experiment A — camera self-calibration
 
@@ -137,8 +137,8 @@ smoothness-only prior cannot localise two blobs from one blurred image. We
 report the failure at full volume because a pre-registered criterion that can
 only be met is not a criterion.
 
-**v2 — the amended protocol.** The amendment (recorded in PROTOCOL.md's
-Deviations section before the rerun) revises the recovery configuration; the
+**v2 — the amended protocol.** Amendment v2 (recorded in PROTOCOL.md before
+the rerun) revises the recovery configuration; the
 data, seeds, and two-arm design are unchanged. Final numbers, from
 `figures/experiment_b_v2.json`:
 

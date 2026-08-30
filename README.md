@@ -99,7 +99,7 @@ against the same coupled measurement. The first registered run (v1) **failed
 its pre-declared target** — coupled relative L2 error 0.9706 against a 0.5
 criterion, centroid shift 6.85 cells — while still recovering total source
 power to a 1.041 ratio versus 1.364 for the one-way arm. The protocol was then
-amended (recorded in its Deviations section) and rerun as v2:
+amended (recorded in `PROTOCOL.md` as Amendment v2) and rerun as v2:
 
 - Coupled arm: relative L2 error **0.1370** (pre-declared gate < 0.5: PASS),
   centroid shift **0.02 cells** (gate < 1.5: PASS), total-power ratio 1.000.
@@ -134,10 +134,10 @@ component can run from its `tesseract_api.py` in-process.
 
 ```bash
 pip install -r requirements.txt
-make judge        # submission audit + 18 fast gates, one PASS/FAIL verdict
-make verify       # rerun the pixels-to-q finite-difference check
-make experiment-a # camera self-calibration
-make experiment-b # source recovery through the coupled equilibrium
+make judge         # submission audit + 18 fast gates, one PASS/FAIL verdict
+make verify        # rerun the pixels-to-q finite-difference check
+make experiment-a  # camera self-calibration
+make experiment-b-v2 # amended source recovery through the coupled equilibrium
 ```
 
 All host dependencies are exactly pinned in `requirements.txt`; each Tesseract

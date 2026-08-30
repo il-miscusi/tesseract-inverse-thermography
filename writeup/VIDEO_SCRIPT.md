@@ -1,8 +1,8 @@
 # Demo video script — "See the heat. Invert the physics." (≤ 5:00)
 
-Numbers marked `[[LIKE_THIS]]` are placeholders: fill them from the FINAL
-`figures/experiment_b_v2.json` / `figures/e2e_gradient_check.json` before
-recording. Target runtime 4:30 at a calm reading pace (~140 wpm).
+All result numbers below are bound to `figures/experiment_b_v2.json` and
+`figures/e2e_gradient_check.json`. Target runtime 4:30 at a calm reading pace
+(~140 wpm).
 
 Screen recording of the landing page + figures + one live terminal. No
 webcam needed. Music optional and quiet.
@@ -55,23 +55,24 @@ arrows right to left. Overlay the two equations when the VO reaches them.
 > PyTorch. One final heat-transport VJP lands on q.
 > No framework ever sees the whole chain. Only VJPs cross the boundaries.
 > We checked the composition against finite differences end to end:
-> relative error [[GRADCHECK_REL_ERR ~ 3.6e-07]].
+> relative error 3.6 times 10 to the minus 7.
 
 ## Shot 4 — Live recovery (2:00–3:10)
 
 **Visuals:** `figures/recovery.mp4` full-screen. Let it play; it carries
-the shot. Caption: "one noisy frame · Adam · gradient through renderer +
-coupled physics".
+the shot. Caption: "illustrative 16×8 recovery · noise-free · Adam · gradient
+through renderer + coupled physics".
 
 **VO:**
-> So: hide the source, render one frame, add sensor noise, and descend.
+> First, an illustrative small-grid recovery: hide the source, render one
+> noise-free frame, and descend.
 > Left, the truth the optimizer has never seen. Middle, its current belief,
 > starting from a flat guess. Right, the image residual — the only thing it
 > is ever told.
-> Watch the residual drain as the belief localises. Each iteration is a
-> full coupled solve, a render, and an adjoint solve —
-> [[MATVECS_PER_GRAD ~ 7]] adjoint matvecs per gradient,
-> [[TOTAL_MATVECS]] across the whole recovery.
+> Watch the residual drain as the belief localises. Each iteration is a full
+> coupled solve, a render, and an adjoint solve. In the final noisy 32-by-16
+> experiment, the implicit adjoint averaged seven matrix-free matvecs per
+> gradient: 2,220 across the coupled recovery.
 
 ## Shot 5 — The coupling is load-bearing (3:10–4:10)
 
@@ -82,10 +83,10 @@ coupled physics".
 > Does the multiphysics actually matter? We ran the identical recovery a
 > second time with the industry-standard shortcut: viscosity frozen, one-way
 > physics — same data, same optimizer, only the gradient changed.
-> The coupled adjoint fits the image [[LOSS_GAP ~ 25]] times better, and
-> recovers the source with relative L-two error [[REL_L2_COUPLED]] against
-> [[REL_L2_ONEWAY]] one-way, with a total-power bias of
-> [[POWER_RATIO_ONEWAY]] when the coupling is ignored.
+> The coupled adjoint reaches the two-count noise floor; the one-way fit stays
+> 65 percent above it. It recovers the source with relative L-two error 0.1370
+> against 0.2457 one-way — 1.79 times worse — while ignoring the coupling
+> biases total recovered power 1.7 percent high.
 > The protocol, seeds, and success criteria were committed before the run —
 > what you see is what the pre-registration produced.
 

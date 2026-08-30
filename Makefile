@@ -1,5 +1,5 @@
 # Tesseract Hackathon 2026 - Track 05 primary entry
-.PHONY: judge test verify experiment-a experiment-b audit
+.PHONY: judge test verify experiment-a experiment-b experiment-b-v2 audit
 
 PYTHON ?= python3
 
@@ -20,6 +20,10 @@ experiment-a:
 experiment-b:
 	COUPLER_INPROCESS=1 DARCY_SOLVER_BIN="$(CURDIR)/tesseracts/darcy-flow/fortran/darcy" \
 	$(PYTHON) scripts/experiment_b.py
+
+experiment-b-v2:
+	COUPLER_INPROCESS=1 DARCY_SOLVER_BIN="$(CURDIR)/tesseracts/darcy-flow/fortran/darcy" \
+	$(PYTHON) scripts/experiment_b_v2.py
 
 audit:
 	$(PYTHON) scripts/submission_audit.py

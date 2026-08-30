@@ -105,3 +105,68 @@ Every number in the README/writeup must come from a JSON artifact in
 figures/ written by the script that produced it, carrying its configuration
 (grid, seeds, noise, priors, iteration counts). Failures and deviations are
 reported in the same place as successes.
+
+---
+
+# Amendment v2 (2026-08-30) — Experiment B recovery re-declared
+
+## What v1 declared, and what it measured
+
+The v1 protocol above declared for Experiment B: coupled arm rel_l2 < 0.5
+and centroid shift < 1.5 cells at sigma_noise = 2. The run
+(figures/experiment_b.json, kept unchanged in the record) FAILED that gate:
+
+- coupled: rel_l2 0.9706, amplitude ratio 0.030, centroid shift 6.85 cells,
+  total power ratio 1.041, final data loss 1896.65
+- one-way: rel_l2 0.9814, amplitude ratio 0.032, centroid shift 6.93 cells,
+  total power ratio 1.364
+
+## Diagnosis (probes, all in the record via scripts/diag_b.py history)
+
+1. **The problem is identifiable; the failure is optimization dynamics.**
+   Initialized AT the true source (16x8, noise-free), the data loss is
+   6.6e-05 — numerically zero — the parameter-space gradient is O(1), and
+   the prior gradient is O(5e-6): the truth is a near-exact global minimum
+   of the objective actually optimized.
+2. **v1 under-converged.** Its loss history falls from 3.40e6 to 1.90e3 and
+   is still descending at iteration 250; final pixel RMS residual is 61.6
+   counts against a 2-count noise floor.
+3. **The flat init worked against amplitude.** q_init = 0.3*Q_SCALE
+   everywhere carries ~10x the true total power. The optimizer spent the run
+   crushing total power globally: the recovered field is near-uniform
+   (min 0.020, max 0.038 in Q_SCALE units vs a true peak of 1.27), with the
+   correct total power (ratio 1.04) but no structure. Once every cell sits
+   at softplus(z) ~ 0.04, softplus_grad = sigmoid(z) ~ 0.037 suppresses the
+   re-growth gradient ~27x — a vanishing-gradient tail that makes escape
+   from the uniform state glacial at 250 iterations.
+4. **The L2-on-Laplacian prior penalises hotspot rims quadratically** —
+   exactly the sharp structure the experiment wants back. Secondary to
+   (2)/(3), but the wrong prior for blob recovery; TV penalises edges only
+   linearly.
+
+## Amended protocol (declared BEFORE the v2 run)
+
+Measurement, physics, camera, emissivity, ground truth, noise (sigma = 2
+counts, seed 42), problem seed 0, grid 32x16, sensor 96x64 — ALL unchanged
+from v1. Both arms keep identical priors, optimizer, iterations, and data.
+Only the recovery changes:
+
+- Init: q = 0.05 * Q_SCALE uniform (a cold plate; total power UNDER truth,
+  so structure grows where the data demands it instead of everything being
+  crushed together).
+- Prior: smoothed isotropic total variation on q/Q_SCALE
+  (`total_variation_penalty`, eps = 1e-6), lambda_tv = 3e-3, set on a 16x8
+  noise-free sweep before this run (scripts/sweep_b.py).
+- Optimizer: Adam on z, lr cosine-decayed 0.2 -> 0.02, 600 iterations.
+- Artifacts: figures/experiment_b_v2.json and
+  figures/experiment_b_v2_fields.npz (q_true, both recovered maps, T fields,
+  measured/clean/rendered/residual images, loss histories). v1 artifacts are
+  never overwritten or deleted.
+- Gate G0 (the end-to-end FD gradient check) is re-run on the final
+  configuration before the result is reported.
+
+## Success criteria (v2, declared now)
+
+Unchanged thresholds: coupled arm rel_l2 < 0.5 AND centroid shift < 1.5
+cells. The one-way arm remains a measurement, not a target, and is reported
+whatever it says. If v2 also fails, that failure is reported alongside v1's.

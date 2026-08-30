@@ -161,7 +161,7 @@ def make_chain(results, out: Path) -> None:
                      fc=PANEL, ec=GRID, lw=1.1))
         ax.text(x + 1.4, y + h - 2.6, title, ha="left", fontsize=9.5,
                 color=INK, weight="bold")
-        ax.text(x + w - 1.2, y + h - 2.6, badge, ha="right", va="center",
+        ax.text(x + w - 1.2, y + 2.0, badge, ha="right", va="center",
                 fontsize=6.5, color="#0b0e14", weight="bold",
                 bbox=dict(boxstyle="round,pad=0.28", fc=badge_color, ec="none"))
         for i, ln in enumerate(lines):

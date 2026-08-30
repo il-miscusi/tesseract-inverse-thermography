@@ -69,6 +69,24 @@ The registered success criterion for the coupled arm is relative source error
 below 0.5 and centroid shift below 1.5 cells. Experiment outputs are JSON and
 NPZ artifacts; smoke-run files are excluded from the judged surface.
 
+## Reported results
+
+The complete, seed- and configuration-stamped outputs are checked in as
+[`figures/experiment_a.json`](figures/experiment_a.json) and
+[`figures/experiment_b.json`](figures/experiment_b.json), with field arrays in
+the matching NPZ files. Experiment A recovered gain to 0.20--0.21% relative
+error across the five noise levels, while separate PSF and offset estimates
+remained weakly identified from one image (PSF absolute error 0.91 px; offset
+relative error 18.98%). This is the pre-declared gain/emissivity ambiguity, not
+a hidden success claim.
+
+Experiment B did not meet its pre-declared coupled target: coupled relative
+source L2 error was 0.9706 with a 6.85-cell centroid shift. It nevertheless
+recovered total source power to a 1.041 ratio, versus 1.364 for the identical
+one-way arm; one-way relative L2 was 0.9814. These are measurements of the
+inverse problem's difficulty and of the feedback-model bias, reported without
+cherry-picking.
+
 ## Reproduce
 
 Requires Python 3.10 or newer and `gfortran`; Docker is optional because every

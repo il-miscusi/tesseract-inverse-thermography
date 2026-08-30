@@ -1,0 +1,53 @@
+{
+  "grid": [
+    32,
+    16
+  ],
+  "sensor": [
+    96,
+    64
+  ],
+  "iters": 250,
+  "lambda_s": 0.0001,
+  "q_scale": 150000000.0,
+  "noise_counts": 2.0,
+  "noise_seed": 42,
+  "problem_seed": 0,
+  "camera": {
+    "sigma": 1.2,
+    "gain": 25.0,
+    "offset": 500.0
+  },
+  "results": {
+    "coupled": {
+      "rel_l2": 0.9706264972522397,
+      "amplitude_ratio": 0.02977803888456003,
+      "centroid_shift_cells": 6.848314045804462,
+      "total_power_ratio": 1.0410871748640194,
+      "final_data_loss": 1896.6516425262962,
+      "adjoint_matvecs_total": 1773
+    },
+    "one_way": {
+      "rel_l2": 0.9814405753764367,
+      "amplitude_ratio": 0.032129910825889334,
+      "centroid_shift_cells": 6.933805566399098,
+      "total_power_ratio": 1.3635113759665147,
+      "final_data_loss": 47385.72900249079,
+      "adjoint_matvecs_total": 0
+    }
+  },
+  "bias": {
+    "rel_l2_coupled": 0.9706264972522397,
+    "rel_l2_one_way": 0.9814405753764367,
+    "one_way_over_coupled_l2": 1.011141338254015,
+    "amplitude_ratio_coupled": 0.02977803888456003,
+    "amplitude_ratio_one_way": 0.032129910825889334,
+    "total_power_ratio_coupled": 1.0410871748640194,
+    "total_power_ratio_one_way": 1.3635113759665147
+  },
+  "success_criteria": {
+    "declared": "coupled rel_l2 < 0.5 and centroid shift < 1.5 cells",
+    "met": false
+  },
+  "seconds": 658.4841241836548
+}

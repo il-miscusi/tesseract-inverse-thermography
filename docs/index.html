@@ -110,6 +110,21 @@
   <figure><img src="assets/recovery_convergence.png" alt="Convergence, coupled vs one-way"></figure>
   <img src="assets/recovery.gif" alt="Recovery animation" loading="lazy">
 
+  <h2 id="necessity">The renderer changes the diagnosis</h2>
+  <p>Experiment C removes the same-grid inverse crime: observations come from a
+     64&times;32 coupled solve and inversion runs at
+     32&times;16. With the calibrated renderer,
+     centroid error is 0.78 cells. A modest camera mismatch
+     (PSF 0.9 vs 1.2 px, gain +5%, offset +10 counts, ambient +3 K, and a small FOV error)
+     still fits within 2.14&times; the
+     calibrated RMS, but moves the inferred hotspot an additional 1.82
+     cells. This passes the committed-before-results diagnostic-necessity gate.</p>
+  <p class="note">The result is deliberately mixed: blackbody and no-vignetting models
+     are visibly rejectable, while removing PSF blur does not worsen localization and
+     improves coarse-grid source L2. The evidence supports calibration sensitivity, not
+     a claim that every renderer stage is indispensable.</p>
+  <figure><img src="assets/renderer_necessity.png" alt="Renderer calibration mismatch changes recovered hotspot"></figure>
+
   <h2 id="renderer">The renderer is physics, not a colormap</h2>
   <p>Planck spectral radiance integrated over the 8&ndash;14&nbsp;&mu;m LWIR band by
      Gauss&ndash;Legendre quadrature, grey-body emission plus reflected ambient
@@ -126,7 +141,7 @@
     <a href="https://github.com/il-miscusi/tesseract-inverse-thermography">source</a> &middot;
     <a href="https://github.com/il-miscusi/tesseract-inverse-thermography/blob/main/writeup/PROTOCOL.md">pre-registered protocol</a> &middot;
     Apache-2.0. Every figure on this page regenerates from committed artifacts with
-    <code>make figures landing</code>.
+    <code>make figures renderer-figure landing</code>.
   </footer>
 </div>
 </body>

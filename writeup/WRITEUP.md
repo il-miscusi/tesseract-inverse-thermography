@@ -158,6 +158,30 @@ data, seeds, and two-arm design are unchanged. Final numbers, from
 The coupled-vs-one-way comparison is reported whatever its sign; if the wrong
 forward model recovers the source just as well, that is the published result.
 
+### Experiment C — is the renderer load-bearing?
+
+This diagnosis-informed follow-up was committed before its first run in
+`RENDERER_PROTOCOL.md`. It removes the identical-discretization inverse crime:
+the observation comes from a 64×32 coupled solve while all recoveries invert at
+32×16. Physics, data, prior, initialization, optimizer, and budget are fixed;
+only the assumed camera changes across full, blackbody, no-PSF, no-vignetting,
+and modest-calibration-mismatch arms.
+
+The calibrated renderer ends at 13.95 counts pixel RMS, 0.78-cell centroid
+error, and 0.885 total-power ratio. The modest mismatch ends at 29.82 counts
+RMS — within the predeclared 3× plausibility envelope — but shifts the centroid
+to 2.60 cells and power to 0.807. Its additional **1.82-cell** error passes the
+fixed diagnostic-necessity criterion. The renderer is therefore load-bearing
+for the inferred location even when the image-space fit is not catastrophically
+bad.
+
+The ablation also bounds the claim. Blackbody and no-vignetting assumptions
+are visibly rejectable (54.32 and 142.42 counts RMS). Removing PSF blur fits
+nearly as well as full (14.51 counts RMS) and improves source L2 from 1.248 to
+1.007. We therefore claim calibration sensitivity, not that every stage is
+individually necessary. Four of five arms hit their 250-iteration limit; only
+no-vignetting met the optimizer convergence condition.
+
 ## 6. Real-world relevance
 
 Thermography-based fault localisation is a working industrial practice —
@@ -172,15 +196,16 @@ pool pyrometry in additive manufacturing and to active-thermography NDT.
 
 ## 7. Limitations
 
-- **Synthetic measurements.** Data are rendered by the same camera model that
-  is inverted (an inverse crime for the camera half). The physics half is not
-  circular in the one-way arm, which inverts through a deliberately wrong
-  forward model; a real-sensor demonstration is future work.
+- **Synthetic measurements.** Experiment B uses the same camera and grid for
+  truth and inversion. Experiment C removes the grid identity and deliberately
+  mismatches the camera in four arms, but a real calibrated sensor remains
+  future work.
 - **Single image, smoothness prior.** v1 shows that one blurred LWIR image
   with a generic prior under-determines a 512-parameter source. Multi-view or
   transient imaging would condition the problem far better.
-- **Calibration error propagation is out of scope** — Experiment B uses true
-  camera parameters, as declared in the protocol.
+- **Calibration error propagation is sampled, not exhaustive.** Experiment C
+  tests one fixed modest mismatch; a distribution over calibration posteriors
+  would be needed for uncertainty bounds.
 - **Grid scale.** 32×16 physics grids keep every CI run under minutes; the
   adjoint machinery is matrix-free and does not depend on this size.
 

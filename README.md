@@ -119,6 +119,24 @@ seed-and-configuration-stamped artifacts in
 [`figures/experiment_b.json`](figures/experiment_b.json), with the recovered
 field arrays in the matching NPZ files.
 
+**C — renderer necessity under independent discretization.** Observations now
+come from a 64×32 coupled solve and inversion runs at 32×16, eliminating the
+same-grid inverse crime. Five budget-matched recoveries vary only the assumed
+camera. The calibrated renderer localizes the source centroid within **0.78
+cells**. A modest calibration mismatch (PSF 0.9 vs 1.2 px, gain +5%, offset
++10 counts, ambient +3 K, and a small FOV error) still fits within **2.14×**
+the calibrated pixel RMS, but shifts the inferred hotspot to **2.60 cells** —
+an additional **1.82-cell** diagnostic error. This passes the
+committed-before-results criterion in
+[`writeup/RENDERER_PROTOCOL.md`](writeup/RENDERER_PROTOCOL.md).
+
+The result is not cherry-picked: blackbody and no-vignetting assumptions are
+visibly rejectable, while removing the PSF does *not* hurt localization and
+improves coarse-grid source L2. The supported claim is precise: camera
+calibration is load-bearing for diagnosis; not every optical stage is.
+
+![Renderer necessity: a plausible fit changes the inferred hotspot](figures/renderer_necessity.png)
+
 ## Why this matters outside a hackathon
 
 Locating a hot component inside an electronics cooling assembly from a thermal
@@ -142,6 +160,7 @@ make judge         # submission audit + 18 fast gates, one PASS/FAIL verdict
 make verify        # rerun the pixels-to-q finite-difference check
 make experiment-a  # camera self-calibration
 make experiment-b-v2 # amended source recovery through the coupled equilibrium
+make experiment-c  # renderer necessity with 64x32 truth / 32x16 inversion
 ```
 
 `make judge` compiles the Fortran solver before running the gates. All host

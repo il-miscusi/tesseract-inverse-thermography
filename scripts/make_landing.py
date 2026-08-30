@@ -24,7 +24,7 @@ ASSETS = DOCS / "assets"
 REPO_URL = "https://github.com/il-miscusi/tesseract-inverse-thermography"
 
 FIGS = ("hero.png", "chain.png", "recovery_convergence.png",
-        "radiometry.png", "recovery.gif")
+        "radiometry.png", "renderer_necessity.png", "recovery.gif")
 
 
 def fmt(x: float, nd: int = 3) -> str:
@@ -36,11 +36,13 @@ def main() -> None:
     ap.add_argument("--results", default="figures/experiment_b.json")
     ap.add_argument("--expa", default="figures/experiment_a.json")
     ap.add_argument("--gradcheck", default="figures/e2e_gradient_check.json")
+    ap.add_argument("--renderer-results", default="figures/experiment_c_renderer.json")
     args = ap.parse_args()
 
     b = json.loads((ROOT / args.results).read_text())
     a = json.loads((ROOT / args.expa).read_text())
     g = json.loads((ROOT / args.gradcheck).read_text())
+    c = json.loads((ROOT / args.renderer_results).read_text())
     rc, ro = b["results"]["coupled"], b["results"]["one_way"]
 
     ASSETS.mkdir(parents=True, exist_ok=True)
@@ -56,6 +58,9 @@ def main() -> None:
 
     arm0 = a["arms"][0]
     loss_gap = ro["final_data_loss"] / rc["final_data_loss"]
+    cf = c["results"]["full"]
+    cm = c["results"]["calibration_mismatch"]
+    centroid_excess = cm["centroid_shift_cells"] - cf["centroid_shift_cells"]
 
     gif_html = (f'<img src="assets/recovery.gif" alt="Recovery animation" loading="lazy">'
                 if have["recovery.gif"] else "")
@@ -188,6 +193,21 @@ def main() -> None:
   <figure><img src="assets/recovery_convergence.png" alt="Convergence, coupled vs one-way"></figure>
   {gif_html}
 
+  <h2 id="necessity">The renderer changes the diagnosis</h2>
+  <p>Experiment C removes the same-grid inverse crime: observations come from a
+     {c['truth_grid'][0]}&times;{c['truth_grid'][1]} coupled solve and inversion runs at
+     {c['inverse_grid'][0]}&times;{c['inverse_grid'][1]}. With the calibrated renderer,
+     centroid error is {cf['centroid_shift_cells']:.2f} cells. A modest camera mismatch
+     (PSF 0.9 vs 1.2 px, gain +5%, offset +10 counts, ambient +3 K, and a small FOV error)
+     still fits within {cm['pixel_rms_counts'] / cf['pixel_rms_counts']:.2f}&times; the
+     calibrated RMS, but moves the inferred hotspot an additional {centroid_excess:.2f}
+     cells. This passes the committed-before-results diagnostic-necessity gate.</p>
+  <p class="note">The result is deliberately mixed: blackbody and no-vignetting models
+     are visibly rejectable, while removing PSF blur does not worsen localization and
+     improves coarse-grid source L2. The evidence supports calibration sensitivity, not
+     a claim that every renderer stage is indispensable.</p>
+  <figure><img src="assets/renderer_necessity.png" alt="Renderer calibration mismatch changes recovered hotspot"></figure>
+
   <h2 id="renderer">The renderer is physics, not a colormap</h2>
   <p>Planck spectral radiance integrated over the 8&ndash;14&nbsp;&mu;m LWIR band by
      Gauss&ndash;Legendre quadrature, grey-body emission plus reflected ambient
@@ -204,7 +224,7 @@ def main() -> None:
     <a href="{REPO_URL}">source</a> &middot;
     <a href="{REPO_URL}/blob/main/writeup/PROTOCOL.md">pre-registered protocol</a> &middot;
     Apache-2.0. Every figure on this page regenerates from committed artifacts with
-    <code>make figures landing</code>.
+    <code>make figures renderer-figure landing</code>.
   </footer>
 </div>
 </body>

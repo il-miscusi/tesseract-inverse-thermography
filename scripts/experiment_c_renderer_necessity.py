@@ -56,6 +56,32 @@ def continuous_fields(nx: int, ny: int) -> tuple[np.ndarray, np.ndarray, np.ndar
     return gamma, true_emissivity(plate.shape), two_blob_source(plate.shape, Q_SCALE)
 
 
+def evaluate_criterion(results: dict[str, dict]) -> dict:
+    """Apply the protocol's fixed plausible-fit and wrong-diagnosis gates."""
+    full = results["full"]
+    arms = {}
+    for name, r in results.items():
+        if name == "full":
+            continue
+        plausible = r["pixel_rms_counts"] <= 3.0 * full["pixel_rms_counts"]
+        wrong_diagnosis = (
+            r["rel_l2"] >= 1.25 * full["rel_l2"]
+            or r["centroid_shift_cells"] - full["centroid_shift_cells"] >= 0.5
+            or abs(r["total_power_ratio"] - full["total_power_ratio"]) >= 0.10
+        )
+        arms[name] = {
+            "plausible_image_fit": bool(plausible),
+            "materially_wrong_diagnosis": bool(wrong_diagnosis),
+            "passes_both": bool(plausible and wrong_diagnosis),
+        }
+    passing = [name for name, verdict in arms.items() if verdict["passes_both"]]
+    return {
+        "diagnostically_load_bearing": bool(passing),
+        "passing_arms": passing,
+        "arms": arms,
+    }
+
+
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--nx", type=int, default=32)
@@ -178,6 +204,7 @@ def main() -> None:
         "truth_camera": {"psf_sigma": SIGMA_TRUE, "gain": GAIN_TRUE,
                          "offset": OFFSET_TRUE, **sensor},
         "results": results,
+        "criterion": evaluate_criterion(results),
         "seconds": time.time() - t0,
     }
     out.write_text(json.dumps(payload, indent=2) + "\n")

@@ -1,5 +1,5 @@
 # Tesseract Hackathon 2026 - Track 05 primary entry
-.PHONY: build judge test verify experiment-a experiment-b experiment-b-v2 experiment-c audit figures animation landing
+.PHONY: build judge test verify experiment-a experiment-b experiment-b-v2 experiment-c audit figures renderer-figure animation landing
 
 PYTHON ?= python3
 FORTRAN_DIR := tesseracts/darcy-flow/fortran
@@ -15,6 +15,9 @@ SNAPSHOTS ?=
 figures:
 	COUPLER_INPROCESS=1 DARCY_SOLVER_BIN="$(CURDIR)/tesseracts/darcy-flow/fortran/darcy" \
 	"$(PYTHON)" scripts/make_figures.py --fields $(FIELDS) --results $(RESULTS) --expa $(EXPA)
+
+renderer-figure:
+	"$(PYTHON)" scripts/make_renderer_figure.py
 
 animation:
 	COUPLER_INPROCESS=1 DARCY_SOLVER_BIN="$(CURDIR)/tesseracts/darcy-flow/fortran/darcy" \

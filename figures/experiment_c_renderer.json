@@ -1,0 +1,169 @@
+{
+  "protocol": "writeup/RENDERER_PROTOCOL.md",
+  "inverse_grid": [
+    32,
+    16
+  ],
+  "truth_grid": [
+    64,
+    32
+  ],
+  "sensor": [
+    96,
+    64
+  ],
+  "optimizer": {
+    "method": "L-BFGS-B",
+    "maxiter": 250
+  },
+  "prior": {
+    "type": "tv",
+    "lambda_tv": 0.003
+  },
+  "init_frac": 0.05,
+  "noise_counts": 2.0,
+  "noise_seed": 42,
+  "problem_seed": 0,
+  "truth_camera": {
+    "psf_sigma": 1.2,
+    "gain": 25.0,
+    "offset": 500.0,
+    "n_u": 96,
+    "n_v": 64,
+    "t_ambient": 295.0,
+    "half_fov_tan": 0.45
+  },
+  "results": {
+    "full": {
+      "rel_l2": 1.2477113020494246,
+      "amplitude_ratio": 3.49973064614214,
+      "centroid_shift_cells": 0.7801610449867797,
+      "total_power_ratio": 0.8850129901666705,
+      "pixel_rms_counts": 13.949994709703487,
+      "final_data_loss": 97.30118516194038,
+      "optimizer": {
+        "nit": 250,
+        "nfev": 325,
+        "status": 1,
+        "message": "STOP: TOTAL NO. OF ITERATIONS REACHED LIMIT"
+      },
+      "adjoint_matvecs_total": 2275,
+      "camera_assumption": {},
+      "rel_l2_over_full": 1.0,
+      "centroid_excess_over_full_cells": 0.0
+    },
+    "blackbody": {
+      "rel_l2": 1.3071771636853073,
+      "amplitude_ratio": 3.698542228106706,
+      "centroid_shift_cells": 0.5567164895675009,
+      "total_power_ratio": 0.766322077061061,
+      "pixel_rms_counts": 54.31657925475439,
+      "final_data_loss": 1475.1453922397243,
+      "optimizer": {
+        "nit": 250,
+        "nfev": 326,
+        "status": 1,
+        "message": "STOP: TOTAL NO. OF ITERATIONS REACHED LIMIT"
+      },
+      "adjoint_matvecs_total": 2009,
+      "camera_assumption": {
+        "blackbody": true
+      },
+      "rel_l2_over_full": 1.047659952697557,
+      "centroid_excess_over_full_cells": -0.22344455541927888
+    },
+    "no_psf": {
+      "rel_l2": 1.0074880881080506,
+      "amplitude_ratio": 2.9334130223701513,
+      "centroid_shift_cells": 0.785641275388374,
+      "total_power_ratio": 0.8849026719094115,
+      "pixel_rms_counts": 14.506509561079866,
+      "final_data_loss": 105.21940448257612,
+      "optimizer": {
+        "nit": 250,
+        "nfev": 337,
+        "status": 1,
+        "message": "STOP: TOTAL NO. OF ITERATIONS REACHED LIMIT"
+      },
+      "adjoint_matvecs_total": 2359,
+      "camera_assumption": {
+        "psf_sigma": 0.05
+      },
+      "rel_l2_over_full": 0.8074689124424889,
+      "centroid_excess_over_full_cells": 0.005480230401594288
+    },
+    "no_vignetting": {
+      "rel_l2": 2.1491748620341755,
+      "amplitude_ratio": 4.6166065569176284,
+      "centroid_shift_cells": 5.272986685167531,
+      "total_power_ratio": 0.531426915839022,
+      "pixel_rms_counts": 142.42099809116053,
+      "final_data_loss": 10141.8703430785,
+      "optimizer": {
+        "nit": 173,
+        "nfev": 224,
+        "status": 0,
+        "message": "CONVERGENCE: RELATIVE REDUCTION OF F <= FACTR*EPSMCH"
+      },
+      "adjoint_matvecs_total": 1350,
+      "camera_assumption": {
+        "half_fov_tan": 0.0
+      },
+      "rel_l2_over_full": 1.7224937038752912,
+      "centroid_excess_over_full_cells": 4.492825640180751
+    },
+    "calibration_mismatch": {
+      "rel_l2": 1.402688284788391,
+      "amplitude_ratio": 2.76624625618417,
+      "centroid_shift_cells": 2.597303459444021,
+      "total_power_ratio": 0.8066895877209903,
+      "pixel_rms_counts": 29.82462414698852,
+      "final_data_loss": 444.7541022600965,
+      "optimizer": {
+        "nit": 250,
+        "nfev": 311,
+        "status": 1,
+        "message": "STOP: TOTAL NO. OF ITERATIONS REACHED LIMIT"
+      },
+      "adjoint_matvecs_total": 2177,
+      "camera_assumption": {
+        "psf_sigma": 0.9,
+        "gain": 26.25,
+        "offset": 510.0,
+        "t_ambient": 298.0,
+        "half_fov_tan": 0.5
+      },
+      "rel_l2_over_full": 1.1242090077122884,
+      "centroid_excess_over_full_cells": 1.8171424144572415
+    }
+  },
+  "criterion": {
+    "diagnostically_load_bearing": true,
+    "passing_arms": [
+      "calibration_mismatch"
+    ],
+    "arms": {
+      "blackbody": {
+        "plausible_image_fit": false,
+        "materially_wrong_diagnosis": true,
+        "passes_both": false
+      },
+      "no_psf": {
+        "plausible_image_fit": true,
+        "materially_wrong_diagnosis": false,
+        "passes_both": false
+      },
+      "no_vignetting": {
+        "plausible_image_fit": false,
+        "materially_wrong_diagnosis": true,
+        "passes_both": false
+      },
+      "calibration_mismatch": {
+        "plausible_image_fit": true,
+        "materially_wrong_diagnosis": true,
+        "passes_both": true
+      }
+    }
+  },
+  "seconds": 2402.3663108348846
+}

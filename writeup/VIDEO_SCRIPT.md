@@ -93,14 +93,27 @@ through renderer + coupled physics".
 > success criteria were committed before the run —
 > what you see is what the pre-registration produced.
 
-## Shot 6 — Close (4:10–4:40)
+## Shot 6 — The renderer changes the diagnosis (4:10–4:40)
+
+**Visuals:** `figures/renderer_necessity.png`, slow zoom from the two recovered
+source panels to their residuals.
+
+**VO:**
+> Finally, we broke the inverse crime: truth at sixty-four by thirty-two,
+> inversion at thirty-two by sixteen. A modest camera calibration error still
+> gives a plausible thermogram fit, but moves the inferred hotspot an extra
+> 1.82 cells. That is the Track Five result: the renderer changes the physical
+> diagnosis. The negative controls are published too — removing blur did not
+> hurt localization, so we do not claim that every stage is indispensable.
+
+## Shot 7 — Close (4:40–4:55)
 
 **Visuals:** `figures/radiometry.png` for 5 s (the ablation strip), then
 the landing page hero with the repo URL on screen.
 
 **VO:**
-> The renderer is physics, not a colormap: switch off emissivity, the blur,
-> or the vignetting, and the counts move — which is exactly why the camera
+> The renderer is physics, not a colormap: change emissivity, calibration,
+> or vignetting, and the counts move — which is exactly why the camera
 > can also calibrate itself: emissivity map, PSF width, gain and offset,
 > all recovered from a single frame in experiment A.
 > Four Tesseracts, three languages, one gradient. Code, protocol, and every

@@ -47,6 +47,7 @@ def main() -> None:
         "writeup/PROTOCOL.md", "writeup/WRITEUP.md",
         "figures/e2e_gradient_check.json",
         "figures/experiment_a.json", "figures/experiment_b.json",
+        "figures/experiment_c_renderer.json", "figures/renderer_necessity.png",
         "tests/test_camera.py", ".github/workflows/verify.yml",
     )
     for relative in required:
@@ -81,6 +82,15 @@ def main() -> None:
         for arm in ("coupled", "one_way"):
             if arm not in b2.get("optimizer", {}):
                 errors.append(f"experiment B v2 missing optimizer metadata for {arm}")
+
+    c_path = ROOT / "figures/experiment_c_renderer.json"
+    if c_path.is_file():
+        c = json.loads(c_path.read_text())
+        criterion = c.get("criterion", {})
+        if not criterion.get("diagnostically_load_bearing"):
+            errors.append("experiment C does not pass its declared renderer-necessity gate")
+        if criterion.get("passing_arms") != ["calibration_mismatch"]:
+            errors.append("experiment C passing arms drifted from the stored evidence")
 
     # Camera suite depth.
     tree = ast.parse((ROOT / "tests/test_camera.py").read_text())

@@ -37,12 +37,22 @@ jobs:
         run: make build-images
       - name: Push images and record immutable digests
         run: |
+          push_retry() {
+            # GHCR intermittently fails a layer upload with "unknown blob";
+            # a straight retry succeeds.
+            for attempt in 1 2 3 4; do
+              docker push "$1" && return 0
+              echo "push $1 failed (attempt $attempt), retrying in $((attempt * 10))s"
+              sleep $((attempt * 10))
+            done
+            return 1
+          }
           echo '{}' > ghcr_digests.json
           for c in darcy-flow heat-transport viscosity-closure thermal-camera; do
             docker tag "$c:latest" "$REG/$c:${{ github.sha }}"
             docker tag "$c:latest" "$REG/$c:latest"
-            docker push "$REG/$c:${{ github.sha }}"
-            docker push "$REG/$c:latest"
+            push_retry "$REG/$c:${{ github.sha }}"
+            push_retry "$REG/$c:latest"
             digest=$(docker inspect --format='{{index .RepoDigests 0}}' "$REG/$c:${{ github.sha }}")
             jq --arg c "$c" --arg d "$digest" '. + {($c): $d}' ghcr_digests.json > tmp.json
             mv tmp.json ghcr_digests.json

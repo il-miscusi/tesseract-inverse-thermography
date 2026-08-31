@@ -243,6 +243,8 @@ def main() -> None:
     parser.add_argument("--ny", type=int, default=16)
     parser.add_argument("--truth-scale", type=int, default=2)
     parser.add_argument("--maxiter", type=int, default=500)
+    parser.add_argument("--oracle-only", action="store_true",
+                        help="score the area-averaged true source, skip optimization")
     parser.add_argument("--out-dir", default="figures/experiment_d")
     args = parser.parse_args()
     allowed = DEV_SEEDS if args.stage == "dev" else BANK_SEEDS
@@ -293,13 +295,42 @@ def main() -> None:
     measured_holdout = clean_holdout + rng_noise.normal(0.0, NOISE_COUNTS,
                                                          clean_holdout.shape)
 
+    # Discretization oracle: even the exact area-averaged source may not be
+    # representable by the coarse physics. This separates that floor from
+    # optimizer error and is stored for every final scene.
+    with ExitStack() as stack:
+        oracle_system = stack.enter_context(coupled_session(plate))
+        oracle_cams = [stack.enter_context(camera_session({**sensor,
+                       "homography": default_homography(t),
+                       "t_ambient": 295.0, "half_fov_tan": 0.45}))
+                       for t in TRAIN_TILTS]
+        oracle_hold_cam = stack.enter_context(camera_session({**sensor,
+                          "homography": default_homography(HOLDOUT_TILT),
+                          "t_ambient": 295.0, "half_fov_tan": 0.45}))
+        oracle_fwd = MultiViewForward(oracle_system, oracle_cams, train_masks,
+                                      gamma, eps, SIGMA_TRUE, GAIN_TRUE,
+                                      OFFSET_TRUE, plate.t_in)
+        oracle_state = oracle_fwd.solve(q_target)
+        oracle_train = oracle_fwd.render(oracle_state)
+        oracle_holdout = oracle_hold_cam.apply(oracle_state.T, eps, SIGMA_TRUE,
+                                               GAIN_TRUE, OFFSET_TRUE)
+    oracle_train_values = np.concatenate([(r - y)[m] for r, y, m in
+                                          zip(oracle_train, measured_train, train_masks)])
+    oracle_hold_diag = residual_diagnostics(oracle_holdout - measured_holdout,
+                                            holdout_mask)
+    oracle = {"train_rms_counts": float(np.sqrt(np.mean(oracle_train_values**2))),
+              "holdout_residual": oracle_hold_diag,
+              "holdout_rms_noise_sigmas": oracle_hold_diag["rms_counts"] / NOISE_COUNTS}
+    print(f"coarse-source oracle: train={oracle['train_rms_counts']:.3f} "
+          f"holdout={oracle_hold_diag['rms_counts']:.3f} counts", flush=True)
+
     results, arrays = {}, {"q_truth": q_truth, "q_target": q_target,
                            "gamma": gamma, "support": support,
                            "train_masks": np.asarray(train_masks),
                            "holdout_mask": holdout_mask,
                            "measured_holdout": measured_holdout,
                            "clean_holdout": clean_holdout}
-    for arm in args.arms:
+    for arm in (() if args.oracle_only else args.arms):
         spec = camera_spec(arm)
         print(f"arm {arm}", flush=True)
         with ExitStack() as stack:
@@ -374,7 +405,8 @@ def main() -> None:
                "train_tilts": list(TRAIN_TILTS), "holdout_tilt": HOLDOUT_TILT,
                "noise_counts": NOISE_COUNTS, "problem_seed": PROBLEM_SEED,
                "source_blobs": blobs, "support_cells": int(support.sum()),
-               "results": results, "materially_harmful_plausible_mismatch": bool(harmful),
+               "coarse_source_oracle": oracle, "results": results,
+               "materially_harmful_plausible_mismatch": bool(harmful),
                "seconds": time.time() - t0}
     (out_dir / f"{stem}.json").write_text(json.dumps(payload, indent=2) + "\n")
     print(f"wrote {out_dir / f'{stem}.json'} ({payload['seconds']:.0f}s)", flush=True)

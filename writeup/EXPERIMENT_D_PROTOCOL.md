@@ -41,6 +41,9 @@ absolute fit gate, does it move the diagnosis by a practically material amount?
   evaluations, gradient tolerance 1e-7, and relative function tolerance 1e-12.
 - The best evaluated iterate and final SciPy iterate are both stored. A run is
   called converged only when SciPy status is zero; otherwise it is an endpoint.
+- Every scene first scores a discretization oracle: the exact 2×2-area-averaged
+  true source through the coarse model. This is diagnostic, not an optimizer
+  arm, and establishes whether the absolute pixel gate is representable at all.
 - Snapshots are retained whenever a new best iterate is found after at least ten
   evaluations, enabling a final animation from the reported experiment.
 

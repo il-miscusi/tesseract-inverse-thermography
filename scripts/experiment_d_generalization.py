@@ -138,14 +138,19 @@ def physical_metrics(q_rec: np.ndarray, q_true: np.ndarray, plate: ColdPlate) ->
 
 class MultiViewForward:
     def __init__(self, system, cameras, masks, gamma, eps, psf_sigma, gain,
-                 offset, t_init, temperature_correction=None):
+                 offset, t_init, temperature_scale=None, temperature_offset=None):
         self.system, self.cameras = system, cameras
         self.masks = masks
         self.gamma, self.eps = gamma, eps
         self.psf_sigma, self.gain, self.offset = psf_sigma, gain, offset
         self.t_init, self._T_warm = t_init, None
-        self.temperature_correction = (np.zeros_like(gamma) if temperature_correction is None
-                                       else np.asarray(temperature_correction, float))
+        self.temperature_scale = (np.ones_like(gamma) if temperature_scale is None
+                                  else np.asarray(temperature_scale, float))
+        self.temperature_offset = (np.zeros_like(gamma) if temperature_offset is None
+                                   else np.asarray(temperature_offset, float))
+
+    def observed_temperature(self, st):
+        return self.temperature_scale * st.T + self.temperature_offset
 
     def solve(self, q):
         self.system.heat.params["q_source"] = np.asarray(q, float)
@@ -157,7 +162,7 @@ class MultiViewForward:
         return st
 
     def render(self, st):
-        observed_T = st.T + self.temperature_correction
+        observed_T = self.observed_temperature(st)
         return [cam.apply(observed_T, self.eps, self.psf_sigma, self.gain, self.offset)
                 for cam in self.cameras]
 
@@ -171,9 +176,10 @@ class MultiViewForward:
             loss += 0.5 * float(np.mean(residual[mask]**2)) / len(images)
             cot = np.zeros_like(residual)
             cot[mask] = residual[mask] / (len(images) * int(mask.sum()))
-            observed_T = st.T + self.temperature_correction
-            dJ_dT += cam.vjp(observed_T, self.eps, self.psf_sigma, self.gain,
-                             self.offset, cot, wrt=("T",))["T"]
+            observed_T = self.observed_temperature(st)
+            camera_bar = cam.vjp(observed_T, self.eps, self.psf_sigma, self.gain,
+                                 self.offset, cot, wrt=("T",))["T"]
+            dJ_dT += self.temperature_scale * camera_bar
         grad, matvecs, ok = gradient_wrt_q(self.system, self.gamma, st, dJ_dT)
         if not ok:
             raise RuntimeError("implicit adjoint GMRES did not converge")
@@ -294,10 +300,17 @@ def main() -> None:
                                  GAIN_TRUE, OFFSET_TRUE) for cam in truth_cams]
         clean_holdout = hold_truth_cam.apply(truth_state.T, eps_truth, SIGMA_TRUE,
                                              GAIN_TRUE, OFFSET_TRUE)
+        q_zero_truth = np.zeros(truth_plate.shape)
+        truth_system.heat.params["q_source"] = q_zero_truth
+        baseline_truth_state = truth_system.solve(
+            gamma_truth, T0=truth_state.T, t_init=truth_plate.t_in,
+            tol=1e-9, maxiter=180)
+        if not baseline_truth_state.converged:
+            raise RuntimeError("fine-grid baseline solve did not converge")
         q_cal_truth = 0.5 * Q_SCALE * chip_mask(truth_plate.shape, truth_plate)
         truth_system.heat.params["q_source"] = q_cal_truth
         calibration_truth_state = truth_system.solve(
-            gamma_truth, T0=truth_state.T, t_init=truth_plate.t_in,
+            gamma_truth, T0=baseline_truth_state.T, t_init=truth_plate.t_in,
             tol=1e-9, maxiter=180)
         if not calibration_truth_state.converged:
             raise RuntimeError("fine-grid calibration solve did not converge")
@@ -309,13 +322,24 @@ def main() -> None:
 
     q_cal_coarse = block_average(q_cal_truth, scale)
     with coupled_session(plate) as calibration_system:
+        calibration_system.heat.params["q_source"] = np.zeros(plate.shape)
+        baseline_coarse_state = calibration_system.solve(
+            gamma, t_init=plate.t_in, tol=1e-9, maxiter=180)
+        if not baseline_coarse_state.converged:
+            raise RuntimeError("coarse-grid baseline solve did not converge")
         calibration_system.heat.params["q_source"] = q_cal_coarse
         calibration_coarse_state = calibration_system.solve(
-            gamma, t_init=plate.t_in, tol=1e-9, maxiter=180)
+            gamma, T0=baseline_coarse_state.T, t_init=plate.t_in,
+            tol=1e-9, maxiter=180)
         if not calibration_coarse_state.converged:
             raise RuntimeError("coarse-grid calibration solve did not converge")
-    temperature_correction = (block_average(calibration_truth_state.T, scale)
-                              - calibration_coarse_state.T)
+    truth_low = block_average(baseline_truth_state.T, scale)
+    truth_high = block_average(calibration_truth_state.T, scale)
+    coarse_delta = calibration_coarse_state.T - baseline_coarse_state.T
+    temperature_scale = np.divide(
+        truth_high - truth_low, coarse_delta,
+        out=np.ones_like(coarse_delta), where=np.abs(coarse_delta) > 1e-8)
+    temperature_offset = truth_low - temperature_scale * baseline_coarse_state.T
 
     # Discretization oracle: even the exact area-averaged source may not be
     # representable by the coarse physics. This separates that floor from
@@ -332,11 +356,11 @@ def main() -> None:
         oracle_fwd = MultiViewForward(oracle_system, oracle_cams, train_masks,
                                       gamma, eps, SIGMA_TRUE, GAIN_TRUE,
                                       OFFSET_TRUE, plate.t_in,
-                                      temperature_correction)
+                                      temperature_scale, temperature_offset)
         oracle_state = oracle_fwd.solve(q_target)
         oracle_train = oracle_fwd.render(oracle_state)
         oracle_holdout = oracle_hold_cam.apply(
-            oracle_state.T + temperature_correction, eps, SIGMA_TRUE,
+            oracle_fwd.observed_temperature(oracle_state), eps, SIGMA_TRUE,
             GAIN_TRUE, OFFSET_TRUE)
     oracle_train_values = np.concatenate([(r - y)[m] for r, y, m in
                                           zip(oracle_train, measured_train, train_masks)])
@@ -350,7 +374,8 @@ def main() -> None:
 
     results, arrays = {}, {"q_truth": q_truth, "q_target": q_target,
                            "gamma": gamma, "support": support,
-                           "temperature_correction": temperature_correction,
+                           "temperature_scale": temperature_scale,
+                           "temperature_offset": temperature_offset,
                            "q_calibration": q_cal_coarse,
                            "train_masks": np.asarray(train_masks),
                            "holdout_mask": holdout_mask,
@@ -371,11 +396,11 @@ def main() -> None:
                     "half_fov_tan": spec["half_fov_tan"]}))
             fwd = MultiViewForward(system, cams, train_masks, gamma, eps, spec["psf_sigma"],
                                    spec["gain"], spec["offset"], plate.t_in,
-                                   temperature_correction)
+                                   temperature_scale, temperature_offset)
             rec = recover(fwd, measured_train, support, args.maxiter)
             st = fwd.solve(rec["q_best"])
             rendered_train = fwd.render(st)
-            rendered_holdout = hold_cam.apply(st.T + temperature_correction, eps,
+            rendered_holdout = hold_cam.apply(fwd.observed_temperature(st), eps,
                                                spec["psf_sigma"],
                                                spec["gain"], spec["offset"])
         train_values = np.concatenate([(r - y)[m]

@@ -29,12 +29,12 @@ absolute fit gate, does it move the diagnosis by a practically material amount?
   excluded because a cell-centred 32×16 surface and a 64×32 surface represent
   that sub-pixel geometric edge differently; the claim concerns thermography
   over the resolved plate surface, not anti-aliasing of its silhouette.
-- Before fault-scene inversion, one separate known uniform-heating calibration
-  load (0.5·Q_SCALE over the chip footprint) is solved on both grids. The
-  block-averaged fine temperature minus the coarse temperature is frozen as a
-  source-independent multi-fidelity temperature correction. It is added before
-  the camera for every arm and bank scene; its derivative is the identity, so
-  the pixels-to-source adjoint is unchanged. No fault-scene or bank observation
+- Before fault-scene inversion, two separate known calibration states (zero
+  load and 0.5·Q_SCALE uniformly over the chip footprint) are solved on both
+  grids. Per coarse cell, those two points define the frozen affine map from
+  coarse temperature to block-averaged fine temperature. It is applied before
+  the camera for every arm and bank scene; its slope is pulled back through the
+  camera VJP into the implicit adjoint. No fault-scene or bank observation
   contributes to this correction.
 
 ## Fixed inverse method
@@ -115,3 +115,12 @@ The known-load temperature correction above was therefore fixed before any
 bank run. The failed oracle JSON/NPZ is retained in `figures/experiment_d/`.
 The absolute gate, held-out seeds, camera arms, and diagnostic thresholds are
 unchanged.
+
+## Development amendment D3 — affine rather than additive transfer
+
+The D2 additive transfer reduced the oracle to 6.16 counts but the optimized
+development scene plateaued near 5.97 counts RMS. That shows the remaining grid
+error is response-dependent, not a constant temperature offset. The same two
+known calibration states are therefore used as an affine transfer, with its
+per-cell slope included in the VJP. This is the final forward-model amendment;
+it was fixed before any bank scene.

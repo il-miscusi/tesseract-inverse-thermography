@@ -23,6 +23,20 @@ from coupler.thermography import (
 )
 
 
+def test_experiment_d_support_and_block_average():
+    from scripts.experiment_d_generalization import block_average, chip_mask
+    from coupler import ColdPlate
+
+    plate = ColdPlate(nx=8, ny=8)
+    mask = chip_mask(plate.shape, plate)
+    assert mask.any()
+    assert not mask[:, -1].any()
+    fine = np.arange(64.0).reshape(8, 8)
+    coarse = block_average(fine, 2)
+    assert coarse.shape == (4, 4)
+    assert coarse[0, 0] == np.mean(fine[:2, :2])
+
+
 def _fd_grad(fn, q, h=1e-7):
     g = np.zeros_like(q)
     for idx in np.ndindex(q.shape):

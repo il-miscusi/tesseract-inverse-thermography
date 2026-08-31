@@ -1,0 +1,80 @@
+# Experiment D protocol — unseen-scene calibration risk
+
+This document separates method development from final evidence. Seeds 0–2 are
+development scenes and may be used to debug or tune the fixed method. The
+twelve bank seeds 101–112 are held out: no method choice may use their results.
+The bank is run only after the final protocol and runner are committed.
+
+## Question
+
+Across unseen component-fault scenes, can the calibrated camera fit a held-out
+view at the declared sensor-noise scale and recover a useful diagnosis? If a
+camera model inside a declared calibration-tolerance family also passes that
+absolute fit gate, does it move the diagnosis by a practically material amount?
+
+## Fixed problem bank
+
+- Twelve scenes, seeds 101–112; each has 2–4 Gaussian component faults with
+  randomized position, width, and amplitude inside the known chip footprint.
+- Truth is generated on a 64×32 coupled-physics grid; inversion is 32×16.
+  Coarse targets are 2×2 area averages of the fine-grid source, not samples of
+  the inversion model.
+- Material topology is fixed across scenes from problem seed 73. Each scene has
+  an independent noise draw derived from its scene seed.
+- The camera records two training poses (homography tilts +0.22 and −0.18) and
+  one held-out pose (+0.05). Gaussian sensor noise is σ=2 counts per pixel.
+
+## Fixed inverse method
+
+- The unknown source is non-negative and restricted to cell centres inside the
+  known physical chip footprint. All cells outside that support are exactly
+  zero. This is a component-fault prior, not a truth-location oracle: positions,
+  count, widths, amplitudes, and total power remain unknown.
+- L-BFGS-B optimizes a softplus parameterization from a flat 0.02·Q_SCALE
+  initialization, with TV weight 3e-4. Maximum 500 iterations / 1500 function
+  evaluations, gradient tolerance 1e-7, and relative function tolerance 1e-12.
+- The best evaluated iterate and final SciPy iterate are both stored. A run is
+  called converged only when SciPy status is zero; otherwise it is an endpoint.
+- Snapshots are retained whenever a new best iterate is found after at least ten
+  evaluations, enabling a final animation from the reported experiment.
+
+## Camera arms
+
+1. `full`: the generating camera (PSF 1.2 px, gain 25, offset 500, ambient
+   295 K, tan-half-FOV 0.45, declared pose homographies).
+2. `mismatch`: a fixed tolerance perturbation (PSF 1.1 px, gain +1%, offset
+   +2 counts, ambient +1 K, tan-half-FOV 0.46, and +0.015 homography tilt).
+
+The mismatch is not called plausible merely because it is close to the full
+arm. Plausibility is evaluated independently on the held-out pose.
+
+## Fixed metrics and gates
+
+For each arm and scene report training and held-out pixel RMS in counts and
+noise sigmas; held-out residual mean; maximum horizontal/vertical lag-1
+residual autocorrelation; source relative L2; centroid error in cells and mm;
+total-power error; peak-location error in mm; and source Wasserstein distance
+in mm.
+
+An arm has an **absolute plausible held-out fit** only if all hold:
+
+- held-out pixel RMS ≤ 2.0 noise sigmas (4 counts);
+- absolute held-out residual mean ≤ 0.25 noise sigmas (0.5 counts);
+- absolute horizontal and vertical lag-1 residual autocorrelation ≤ 0.10.
+
+A diagnosis is operationally useful when centroid error ≤1.0 mm, peak error
+≤1.5 mm, and total-power relative error ≤20%. A mismatch is materially harmful
+when it passes the same absolute fit gate yet increases centroid or Wasserstein
+error by at least 0.5 mm, peak error by at least 1.0 mm, or total-power error by
+at least 10 percentage points.
+
+## Bank reporting
+
+No bank scene or failed arm is excluded. Report median, IQR, 90th percentile,
+worst case, paired win count, and a deterministic 10,000-resample paired
+bootstrap 95% interval for full-minus-mismatch diagnostic error. The grand-prize
+calibration-risk claim is accepted only if the calibrated arm passes the
+absolute fit gate on at least 10/12 scenes and a materially harmful mismatch
+passes that gate on at least 6/12 scenes. Otherwise the result is reported as a
+negative finding and the submission falls back to the verified composition
+claim.

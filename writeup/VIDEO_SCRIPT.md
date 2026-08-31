@@ -1,7 +1,8 @@
 # Demo video script — "See the heat. Invert the physics." (≤ 5:00)
 
-All result numbers below are bound to `figures/experiment_b_v2.json` and
-`figures/e2e_gradient_check.json`. Target runtime 4:30 at a calm reading pace
+All result numbers below are bound to the frozen Experiment D bank,
+`figures/experiment_b_v2.json`, and the two gradient receipts. Target runtime
+4:30 at a calm reading pace
 (~140 wpm).
 
 Screen recording of the landing page + figures + one live terminal. No
@@ -62,51 +63,46 @@ arrows right to left. Overlay the two equations when the VO reaches them.
 ## Shot 4 — Live recovery (2:00–3:10)
 
 **Visuals:** `figures/recovery.mp4` full-screen. Let it play; it carries
-the shot. Caption: "illustrative 16×8 recovery · noise-free · Adam · gradient
-through renderer + coupled physics".
+the shot. Caption: "frozen unseen scene 101 · calibrated arm · real L-BFGS-B
+trajectory · held-out residual".
 
 **VO:**
-> First, an illustrative small-grid recovery: hide the source, render one
-> noise-free frame, and descend.
+> This is one of the twelve frozen bank recoveries: seed 101, opened only
+> after the method and gates were fixed. Hide the source, render two noisy
+> training views, and descend.
 > Left, the truth the optimizer has never seen. Middle, its current belief,
-> starting from a flat guess. Right, the image residual — the only thing it
-> is ever told.
-> Watch the residual drain as the belief localises. Each iteration is a full
+> starting from a flat guess. Right, the final residual on a third camera
+> view that the optimizer never sees.
+> Watch the belief localise. Each iteration is a full
 > coupled solve, a render, and an adjoint solve. In the final noisy 32-by-16
 > experiment, the implicit adjoint averaged seven matrix-free matvecs per
 > gradient: 2,220 across the coupled recovery.
 
-## Shot 5 — The coupling is load-bearing (3:10–4:10)
+## Shot 5 — Frozen-bank generalization (3:10–4:05)
 
-**Visuals:** `figures/recovery_convergence.png`, then the results table on
-`docs/index.html` (scroll slowly).
-
-**VO:**
-> Does the multiphysics actually matter? We ran the identical recovery a
-> second time with the industry-standard shortcut: viscosity frozen, one-way
-> physics — same data, prior, optimizer, and budget, but a deliberately
-> simplified forward model and its matching derivative.
-> The coupled arm reaches the two-count noise floor; the frozen-viscosity arm stays
-> 65 percent above it. It recovers the source with relative L-two error 0.1370
-> against 0.2457 one-way — 1.79 times worse — while ignoring the coupling
-> biases total recovered power 1.7 percent high.
-> Both runs reached their declared iteration limit, so these are honest
-> budget-matched endpoints, not convergence claims. The protocol, seeds, and
-> success criteria were committed before the run —
-> what you see is what the pre-registration produced.
-
-## Shot 6 — The renderer changes the diagnosis (4:10–4:40)
-
-**Visuals:** `figures/renderer_necessity.png`, slow zoom from the two recovered
-source panels to their residuals.
+**Visuals:** `figures/experiment_d_generalization.png`, then the frozen-bank
+section on `docs/index.html` (scroll slowly).
 
 **VO:**
-> Finally, we broke the inverse crime: truth at sixty-four by thirty-two,
-> inversion at thirty-two by sixteen. A modest camera calibration error still
-> gives a plausible thermogram fit, but moves the inferred hotspot an extra
-> 1.82 cells. That is the Track Five result: the renderer changes the physical
-> diagnosis. The negative controls are published too — removing blur did not
-> hurt localization, so we do not claim that every stage is indispensable.
+> Now the test that matters: twelve unseen fault scenes, fine-grid truth,
+> coarse-grid inversion, and an independently held-out view. The calibrated
+> system gives an operationally useful diagnosis on all twelve and passes
+> every absolute pixel check on ten. Median held-out RMS is 2.014 counts at a
+> two-count noise floor; median centroid error is 0.088 millimetres; median
+> total-power error is 0.153 percent.
+> Every scene and every failed gate is here. Nothing is filtered after the run.
+
+## Shot 6 — A result that can say no (4:05–4:35)
+
+**Visuals:** stay on the paired power-error panel, then reveal the verdict line.
+
+**VO:**
+> A four-percent emissivity error increases inferred power error on all twelve
+> paired scenes: median 4.42 percentage points, with a bootstrap interval from
+> 3.28 to 4.88. But our stronger preregistered claim required six scenes to be
+> both independently plausible and at least five points harmful. Only one did.
+> So that claim is not accepted. A differentiable system should make scientific
+> claims testable — including claims the evidence rejects.
 
 ## Shot 7 — Close (4:40–4:55)
 
@@ -114,11 +110,9 @@ source panels to their residuals.
 the landing page hero with the repo URL on screen.
 
 **VO:**
-> The renderer is physics, not a colormap: change emissivity, calibration,
-> or vignetting, and the counts move — which is exactly why the camera
-> can also calibrate itself: emissivity map, PSF width, gain and offset,
-> all recovered from a single frame in experiment A.
-> Four Tesseracts, three languages, one gradient. Code, protocol, and every
+> The renderer is physics, not a colormap. Four Tesseracts, three native
+> derivative regimes, one implicit adjoint, and one gradient from pixels to
+> the hidden source. Code, frozen protocol, raw bank, and every
 > figure you've seen regenerate with one make target. Thanks for watching.
 
 ---

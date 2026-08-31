@@ -158,7 +158,47 @@ data, seeds, and two-arm design are unchanged. Final numbers, from
 The coupled-vs-one-way comparison is reported whatever its sign; if the wrong
 forward model recovers the source just as well, that is the published result.
 
-### Experiment C — is the renderer load-bearing?
+### Experiment D — frozen unseen-scene generalization bank
+
+Experiment D is the headline scientific test. Its separate protocol
+(`writeup/EXPERIMENT_D_PROTOCOL.md`) fixes the method, seeds 101–112, absolute
+pixel gates, diagnostic gates, mismatch, and reporting rule before any bank
+scene is opened. Truth is generated on a 64×32 coupled grid and inverted on
+32×16. Two camera poses are used in the loss; a third is held out. The source
+is restricted to the known 20-cell physical chip footprint, but its positions,
+count, widths, amplitudes, and total power are unknown.
+
+The coarse model initially could not represent the fine-grid observation: its
+exact-source oracle missed by 51 counts. Rather than letting the optimizer
+hide that discrepancy in the source, development scenes 0–2 were used to fix
+an independently measured multi-fidelity discrepancy tangent. A known uniform
+load and one perturbation at each of the 20 chip cells are rendered on both
+grids and at all three poses. The resulting 20-column observation-space map is
+applied after the camera; its exact direct VJP is added to the camera and
+implicit-physics gradient. No random fault scene contributes to calibration.
+
+On the frozen bank (`figures/experiment_d/experiment_d_summary.json`):
+
+- the calibrated arm is operationally useful on **12/12** scenes and passes
+  the independently held-out absolute pixel gate on **10/12**;
+- median held-out RMS is **2.014 counts** against σ=2-count noise, median
+  centroid error is **0.088 mm**, median Wasserstein error **0.157 mm**, and
+  median total-power error **0.153%**;
+- a fixed 4% emissivity underestimate increases absolute power error on
+  **12/12** paired scenes. Its median increase is **4.42 percentage points**;
+  the deterministic 10,000-resample paired bootstrap 95% interval is
+  **3.28–4.88 points**.
+
+The preregistered calibration-risk claim is nevertheless **not accepted**.
+Only 1/12 scenes, not the required 6/12, had a mismatch that simultaneously
+passed every absolute plausibility check and increased error by at least the
+fixed five-point material threshold. Nine mismatch arms passed plausibility,
+but their median increase among those scenes was 4.40 points—consistent and
+below the declared cutoff. The bank therefore establishes generalization of
+the composed inverse and a systematic emissivity-to-power bias, not the
+predeclared prevalence of materially harmful but plausible miscalibration.
+
+### Experiment C — is the renderer load-bearing? (historical stress test)
 
 This diagnosis-informed follow-up was committed before its first run in
 `RENDERER_PROTOCOL.md`. It removes the identical-discretization inverse crime:
@@ -197,16 +237,15 @@ pool pyrometry in additive manufacturing and to active-thermography NDT.
 
 ## 7. Limitations
 
-- **Synthetic measurements.** Experiment B uses the same camera and grid for
-  truth and inversion. Experiment C removes the grid identity and deliberately
-  mismatches the camera in four arms, but a real calibrated sensor remains
-  future work.
+- **Synthetic measurements.** Experiment D removes the grid identity, uses
+  multiple views and a frozen unseen-scene bank, but a real calibrated sensor
+  remains future work.
 - **Single image, smoothness prior.** v1 shows that one blurred LWIR image
   with a generic prior under-determines a 512-parameter source. Multi-view or
   transient imaging would condition the problem far better.
-- **Calibration error propagation is sampled, not exhaustive.** Experiment C
-  tests one fixed modest mismatch; a distribution over calibration posteriors
-  would be needed for uncertainty bounds.
+- **Calibration error propagation is sampled, not exhaustive.** Experiment D
+  tests one fixed 4% emissivity mismatch. A posterior over emissivity, pose,
+  optics, and sensor calibration is needed for full uncertainty bounds.
 - **Grid scale.** 32×16 physics grids keep every CI run under minutes; the
   adjoint machinery is matrix-free and does not depend on this size.
 
@@ -222,3 +261,7 @@ compiles the Fortran solver from source and runs the fast judged surface on
 every push. All dependencies are pinned exactly. Provenance of the physics
 core copied from the same author's Track 02 repository is recorded in
 `NOTICE.md`.
+
+The frozen Experiment D bank is reproduced from its checked-in scene JSON/NPZ
+artifacts with `make summarize-experiment-d`; its raw optimizer logs are kept
+under `logs/experiment_d_bank/`. The command refuses missing or extra seeds.

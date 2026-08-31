@@ -47,7 +47,7 @@
     <b>Track 05 · Differentiable graphics &amp; rendering</b>
     <div>
       <a href="#chain">the chain</a>
-      <a href="#results">results</a>
+      <a href="#generalization">evidence</a>
       <a href="#renderer">the renderer</a>
       <a href="https://github.com/il-miscusi/tesseract-inverse-thermography">repository</a>
     </div>
@@ -63,7 +63,7 @@
       Then we asked one noisy rendered frame a question no framework can answer alone:
       <b>which part of the chip is overheating?</b> The gradient that answers it runs from
       pixels, back through the renderer, through an implicit-function-theorem adjoint
-      spanning three AD systems and hand-written Fortran, to the volumetric heat source.</p>
+      spanning three native derivative regimes and hand-written Fortran, to the volumetric heat source.</p>
   </header>
 
   <figure>
@@ -76,10 +76,10 @@
   <div class="cards">
     <div class="card"><div class="big">3.6e-07</div>
       <div class="lbl">end-to-end gradient vs finite differences (pixels &rarr; q), verdict PASS</div></div>
-    <div class="card"><div class="big">2220</div>
-      <div class="lbl">adjoint GMRES matvecs across 317 objective evaluations — each one a VJP chain over three components</div></div>
-    <div class="card"><div class="big">1.65&times;</div>
-      <div class="lbl">final recorded image-space loss gap: coupled vs frozen-viscosity model, same recovery budget</div></div>
+    <div class="card"><div class="big">12/12</div>
+      <div class="lbl">operationally useful diagnoses on the frozen unseen-scene bank</div></div>
+    <div class="card"><div class="big">4.42 pp</div>
+      <div class="lbl">paired median power-error increase from only 4% emissivity error; 12/12 same direction</div></div>
     <div class="card"><div class="big">1.1e-07</div>
       <div class="lbl">finite-difference error through four served containers · 80 s · PASS</div></div>
   </div>
@@ -95,7 +95,27 @@
      relative error.</p>
   <figure><img src="assets/chain.png" alt="Differentiable chain diagram"></figure>
 
-  <h2 id="results">Results: the coupling is load-bearing</h2>
+  <h2 id="generalization">Frozen-bank evidence, including the negative verdict</h2>
+  <p>Twelve fault scenes stayed sealed until the method, two-view training,
+     held-out third view, absolute pixel gate, and 4% emissivity mismatch were fixed.
+     Truth runs at 64&times;32 and inversion at 32&times;16. The calibrated arm is
+     operationally useful on <b>12/12</b> scenes and
+     passes every held-out residual check on <b>10/12</b>.
+     Median held-out RMS is 2.014 counts
+     at a 2-count noise floor; median centroid error is
+     0.088&nbsp;mm.</p>
+  <p>A fixed 4% emissivity underestimate increases absolute total-power error on
+     <b>12/12</b> paired scenes. The median increase is
+     <b>4.42 percentage points</b> (deterministic paired-bootstrap
+     95% interval 3.28&ndash;4.88). The preregistered stronger claim is
+     <b>not accepted</b>: only 1/12,
+     short of 6/12, were both independently plausible and at least five points harmful.
+     No scene or failed arm is excluded.</p>
+  <figure><img src="assets/experiment_d_generalization.png" alt="Paired unseen-scene source power error and held-out residuals">
+    <figcaption>Experiment D. Every point is a frozen scene; red mismatch markers fail
+      at least one independent plausibility condition, even when RMS alone is below 2&sigma;.</figcaption></figure>
+
+  <h2 id="results">Mechanism check: the coupling is load-bearing</h2>
   <p>Two recoveries share data, prior, optimizer, and budget. The second uses a
      deliberately simplified frozen-viscosity forward model and its matching derivative;
      the comparison therefore measures model mismatch, not a gradient-only intervention.</p>
@@ -142,9 +162,9 @@
     Tesseract Hackathon 2026 &middot; Track 05 &middot;
     <a href="https://github.com/il-miscusi/tesseract-inverse-thermography">source</a> &middot;
     <a href="https://github.com/il-miscusi/tesseract-inverse-thermography/blob/main/output/pdf/tesseract_inverse_thermography.pdf">paper</a> &middot;
-    <a href="https://github.com/il-miscusi/tesseract-inverse-thermography/blob/main/writeup/PROTOCOL.md">pre-registered protocol</a> &middot;
+    <a href="https://github.com/il-miscusi/tesseract-inverse-thermography/blob/main/writeup/EXPERIMENT_D_PROTOCOL.md">frozen-bank protocol</a> &middot;
     Apache-2.0. Every figure on this page regenerates from committed artifacts with
-    <code>make figures renderer-figure landing</code>.
+    <code>make summarize-experiment-d figures renderer-figure landing</code>.
   </footer>
 </div>
 </body>

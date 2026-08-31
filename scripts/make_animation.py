@@ -90,13 +90,28 @@ def run_demo(out_npz: Path, *, nx=16, ny=8, n_u=48, n_v=32, iters=60,
 
 
 # ------------------------------------------------------------------ rendering
-def render_frames(snap, frame_dir: Path) -> list[Path]:
+def render_frames(snap, frame_dir: Path, source_label: str = "") -> list[Path]:
     figstyle.use()
-    q_true = np.asarray(snap["q_true"]) / 1e6
-    q_snaps = np.asarray(snap["q_snaps"]) / 1e6
-    resid = np.asarray(snap["resid_snaps"])
-    losses = np.asarray(snap["losses"])
-    its = np.asarray(snap["iters"])
+    if "snapshots_full" in snap.files:
+        # Experiment D stores every new-best source iterate. The final held-out
+        # residual is deliberately not recomputed for intermediate sources: it
+        # belongs to the held-out evaluation, not the training objective.
+        q_true = np.asarray(snap["q_target"]) / 1e6
+        q_snaps = np.asarray(snap["snapshots_full"]) / 1e6
+        final_resid = np.asarray(snap["residual_holdout_full"])
+        resid = np.repeat(final_resid[None, ...], len(q_snaps), axis=0)
+        history = np.asarray(snap["history_full"])
+        sample = np.linspace(0, len(history) - 1, len(q_snaps)).round().astype(int)
+        losses = history[sample]
+        its = sample + 1
+        residual_title = "final held-out residual (counts)"
+    else:
+        q_true = np.asarray(snap["q_true"]) / 1e6
+        q_snaps = np.asarray(snap["q_snaps"]) / 1e6
+        resid = np.asarray(snap["resid_snaps"])
+        losses = np.asarray(snap["losses"])
+        its = np.asarray(snap["iters"])
+        residual_title = "image residual (counts)"
 
     qmax = max(q_true.max(), q_snaps.max())
     rmax = float(np.abs(resid[0]).max())
@@ -118,7 +133,7 @@ def render_frames(snap, frame_dir: Path) -> list[Path]:
         ax = axes[2]
         im = ax.imshow(resid[k].T, origin="lower", cmap=figstyle.CMAP_DIVERGING,
                        vmin=-rmax, vmax=rmax, aspect="auto", extent=[0, 1, 0, 1])
-        ax.set_title("image residual (counts)", pad=6)
+        ax.set_title(residual_title, pad=6)
         ax.text(0.03, 0.05, f"loss {losses[k]:.3e}", transform=ax.transAxes,
                 fontsize=7.5, color=INK,
                 bbox=dict(boxstyle="round,pad=0.3", fc=PANEL, ec=GRID))
@@ -127,7 +142,8 @@ def render_frames(snap, frame_dir: Path) -> list[Path]:
         for a in axes:
             a.set_xticks([])
             a.set_yticks([])
-        fig.suptitle("Gradient descent through renderer + coupled physics",
+        suffix = f" — {source_label}" if source_label else ""
+        fig.suptitle("Gradient descent through renderer + coupled physics" + suffix,
                      fontsize=11.5, y=1.02, color=INK)
         fig.tight_layout()
         p = frame_dir / f"frame_{k:04d}.png"
@@ -180,6 +196,7 @@ def main() -> None:
     ap.add_argument("--outdir", default="figures")
     ap.add_argument("--fps", type=int, default=8)
     ap.add_argument("--iters", type=int, default=60, help="demo iterations")
+    ap.add_argument("--label", default="", help="truthful run label shown in frames")
     args = ap.parse_args()
 
     outdir = ROOT / args.outdir
@@ -197,7 +214,7 @@ def main() -> None:
 
     snap = np.load(snap_path)
     with tempfile.TemporaryDirectory() as td:
-        paths = render_frames(snap, Path(td))
+        paths = render_frames(snap, Path(td), args.label)
         encode(paths, outdir / "recovery.mp4", outdir / "recovery.gif",
                fps=args.fps)
 

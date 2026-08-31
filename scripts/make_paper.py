@@ -104,12 +104,16 @@ def draw_table(c: canvas.Canvas, data, x, y, widths, row_heights=None,
 def main() -> None:
     b = json.loads((ROOT / "figures/experiment_b_v2.json").read_text())
     cdata = json.loads((ROOT / "figures/experiment_c_renderer.json").read_text())
+    d = json.loads((ROOT / "figures/experiment_d/experiment_d_summary.json").read_text())
     grad = json.loads((ROOT / "figures/e2e_gradient_check.json").read_text())
     container = json.loads((ROOT / "figures/container_e2e_gradient_check.json").read_text())
     rc, ro = b["results"]["coupled"], b["results"]["one_way"]
     cf = cdata["results"]["full"]
     cm = cdata["results"]["calibration_mismatch"]
     centroid_excess = cm["centroid_shift_cells"] - cf["centroid_shift_cells"]
+    dfull = d["arms"]["full"]
+    dpair = d["paired_diagnostic_error"]["total_power_relative_error"]
+    dci = [100 * value for value in dpair["median_bootstrap_95_ci"]]
 
     OUT.parent.mkdir(parents=True, exist_ok=True)
     pdf = canvas.Canvas(str(OUT), pagesize=A4)
@@ -129,7 +133,7 @@ def main() -> None:
     pdf.drawString(M, y, "Usi Adia-Nimuwa | github.com/il-miscusi/tesseract-inverse-thermography")
     y -= 16
     section_rule(pdf, y); y -= 14
-    y = p(pdf, "<b>Abstract.</b> A thermal image is not temperature. It is band-integrated Planck radiance, modified by emissivity, reflected ambient, projection, optical blur, vignetting, and sensor calibration. We implement that measurement model as a differentiable JAX Tesseract and pull a pixel loss through it, through a coupled flow-heat fixed point, and back to an unknown volumetric heat source. The coupled system spans a PyTorch viscosity closure, a Fortran Darcy/Brinkman solver with a hand-derived adjoint, and JAX heat transport. The complete pixels-to-source derivative matches finite differences at %.2e in-process and %.2e through four served containers. Under independent truth/inversion grids, a camera-calibration mismatch moves the inferred hotspot an additional %.2f coarse cells, but both recovered images remain above the sensor-noise scale. This is calibration-sensitivity evidence, not a plausible-fit claim." % (grad["best_rel_err"], container["best_rel_err"], centroid_excess), M, y, W - 2 * M)
+    y = p(pdf, "<b>Abstract.</b> A thermal image is not temperature. It is band-integrated Planck radiance, modified by emissivity, reflected ambient, projection, optical blur, vignetting, and sensor calibration. We implement that measurement model as a differentiable JAX Tesseract and pull a pixel loss through it, through a coupled flow-heat fixed point, and back to an unknown volumetric heat source. The coupled system spans a PyTorch viscosity closure, a Fortran Darcy/Brinkman solver with a hand-derived adjoint, and JAX heat transport. The complete pixels-to-source derivative matches finite differences at %.2e in-process and %.2e through four served containers. On a frozen 12-scene bank with 64x32 truth, 32x16 inversion, and a held-out camera view, the calibrated system produces useful diagnoses on 12/12 scenes; a 4%% emissivity error increases power error on 12/12 pairs by a median %.2f percentage points (95%% bootstrap interval %.2f-%.2f). The stronger preregistered harm-prevalence claim is not accepted." % (grad["best_rel_err"], container["best_rel_err"], 100 * dpair["median"], dci[0], dci[1]), M, y, W - 2 * M)
     y -= 12
     image_contain(pdf, ROOT / "figures/hero.png", M, y - 146, W - 2 * M, 146)
     y -= 154
@@ -137,21 +141,21 @@ def main() -> None:
     y -= 10
     y = p(pdf, "Three contributions", M, y, W - 2 * M, H1)
     col = (W - 2 * M - 14) / 2
-    p(pdf, "<b>Composition.</b> Four typed Tesseracts expose apply and VJP endpoints across three differentiation systems. A matrix-free implicit adjoint composes them without a global tape.", M, y, col)
-    p(pdf, "<b>Evidence.</b> A committed-before-results renderer ablation uses a 64x32 truth grid and 32x16 inversion, reports negative controls, and makes calibration sensitivity measurable.", M + col + 14, y, col)
+    p(pdf, "<b>Composition.</b> Four typed Tesseracts expose apply and VJP endpoints across three native derivative regimes. A matrix-free implicit adjoint composes them without a global tape.", M, y, col)
+    p(pdf, "<b>Evidence.</b> A frozen 12-scene bank uses 64x32 truth, 32x16 inversion, two training views, one held-out view, absolute residual gates, and no excluded failures.", M + col + 14, y, col)
     p(pdf, "<b>Reproducibility.</b> Fast CI verifies the API path. A separate target builds and serves all four images and stores image IDs, source commit, timing, and the finite-difference table.", M, y - 52, col)
     p(pdf, "<b>Honest limits.</b> Same-grid accuracy, optimizer limits, synthetic data, and the no-PSF negative result are all reported. Claims are bounded to what the artifacts establish.", M + col + 14, y - 52, col)
     dashboard_y = 270
     section_rule(pdf, dashboard_y + 28)
     p(pdf, "Evidence dashboard", M, dashboard_y + 15, W - 2 * M, H2)
     dashboard = [
-        ["API gradient", "4-container gradient", "same-grid source L2", "calibration shift"],
+        ["API gradient", "4-container gradient", "useful unseen scenes", "paired power bias"],
         ["%.2e" % grad["best_rel_err"], "%.2e" % container["best_rel_err"],
-         "%.4f" % rc["rel_l2"], "+%.2f cells" % centroid_excess],
+         "%d/12" % dfull["operationally_useful_count"], "+%.2f pp" % (100 * dpair["median"])],
     ]
     draw_table(pdf, dashboard, M, dashboard_y - 3,
                [(W - 2 * M) / 4] * 4, row_heights=[24, 34], font_size=7.8)
-    p(pdf, "<b>Track 05 thesis.</b> The decisive result is not that a camera can be differentiated. It is that modest calibration error changes the recovered physical cause even when the image fit remains inside the predeclared plausibility envelope. Tesseract makes that camera VJP composable with an implicit, cross-language equilibrium.", M, dashboard_y - 78, W - 2 * M, BODY)
+    p(pdf, "<b>Track 05 thesis.</b> The decisive result is not merely that a camera can be differentiated. Tesseract makes its VJP operationally composable with an implicit cross-language equilibrium, and the frozen bank tests the resulting inverse system beyond its development scenes. The negative preregistered verdict remains visible alongside the positive paired evidence.", M, dashboard_y - 78, W - 2 * M, BODY)
     pdf.showPage()
 
     # Page 2 - method.
@@ -189,29 +193,40 @@ def main() -> None:
     pdf.showPage()
 
     # Page 3 - decisive evidence.
-    page_base(pdf, 3, "Evidence")
+    page_base(pdf, 3, "Frozen bank")
     y = H - 54
-    y = p(pdf, "Calibration shifts the diagnosis under model discrepancy", M, y, W - 2 * M, H1)
-    y = p(pdf, "Experiment C was committed before its first result-producing run. Observations come from the complete camera over a 64x32 coupled solve; all recoveries invert at 32x16 with identical physics, data, TV prior, initialization, optimizer, and budget. Only the assumed camera changes.", M, y, W - 2 * M)
+    y = p(pdf, "Generalization on twelve unseen fault scenes", M, y, W - 2 * M, H1)
+    y = p(pdf, "Experiment D seals seeds 101-112 until the inverse method, two training views, held-out third view, 4% emissivity mismatch, absolute residual gates, and reporting rule are fixed. Truth uses a 64x32 coupled solve and inversion uses 32x16. A known uniform load plus one perturbation at each of 20 chip cells independently calibrates a differentiable observation-space multi-fidelity tangent; no fault scene contributes to it.", M, y, W - 2 * M)
     y -= 7
-    image_contain(pdf, ROOT / "figures/renderer_necessity.png", M, y - 276, W - 2 * M, 276)
-    y -= 282
-    y = p(pdf, "<b>Figure 3.</b> Calibrated and modest-mismatch recoveries see the same observation. Source panels are normalized individually; printed power ratios preserve amplitude information. The residual color scale is shared.", M, y, W - 2 * M, CAPTION)
+    image_contain(pdf, ROOT / "figures/experiment_d_generalization.png", M, y - 224, W - 2 * M, 224)
+    y -= 230
+    y = p(pdf, "<b>Figure 3.</b> Every paired point is retained. Red mismatch markers fail at least one independent plausibility condition (residual mean or whiteness can reject an arm even when RMS is below 2 sigma).", M, y, W - 2 * M, CAPTION)
     y -= 8
-    rows = [["camera assumption", "pixel RMS", "source L2", "centroid", "power", "status"]]
-    names = [("full", "calibrated"), ("blackbody", "blackbody"),
-             ("no_psf", "no PSF"), ("no_vignetting", "no vignette"),
-             ("calibration_mismatch", "modest mismatch")]
-    for key, label in names:
-        r = cdata["results"][key]
-        rows.append([label, "%.2f" % r["pixel_rms_counts"], "%.3f" % r["rel_l2"],
-                     "%.2f" % r["centroid_shift_cells"], "%.3f" % r["total_power_ratio"],
-                     "conv" if r["optimizer"]["status"] == 0 else "limit"])
-    y = draw_table(pdf, rows, M, y, [128, 72, 72, 72, 72, 64])
-    y -= 10
+    rows = [
+        ["arm", "plausible", "useful", "RMS counts", "centroid mm", "power error"],
+        ["calibrated", "%d/12" % dfull["absolute_plausible_fit_count"],
+         "%d/12" % dfull["operationally_useful_count"],
+         "%.3f" % dfull["metrics"]["holdout_rms_counts"]["median"],
+         "%.3f" % dfull["metrics"]["centroid_error_mm"]["median"],
+         "%.3f%%" % (100 * dfull["metrics"]["total_power_relative_error"]["median"])],
+        ["4% emissivity error", "%d/12" % d["arms"]["mismatch"]["absolute_plausible_fit_count"],
+         "%d/12" % d["arms"]["mismatch"]["operationally_useful_count"],
+         "%.3f" % d["arms"]["mismatch"]["metrics"]["holdout_rms_counts"]["median"],
+         "%.3f" % d["arms"]["mismatch"]["metrics"]["centroid_error_mm"]["median"],
+         "%.3f%%" % (100 * d["arms"]["mismatch"]["metrics"]["total_power_relative_error"]["median"])],
+    ]
+    y = draw_table(pdf, rows, M, y, [118, 72, 68, 82, 82, 89])
+    y -= 12
     col = (W - 2 * M - 16) / 2
-    p(pdf, "<b>Historical relative gate: PASS; absolute gate: FAIL.</b> The modest mismatch passes the original 3x-relative criterion, but 29.82 counts RMS and the calibrated 13.95 counts both exceed the 2-count noise scale. The result cannot support a plausible-fit claim.", M, y, col)
-    p(pdf, "<b>Negative evidence retained.</b> Blackbody and no-vignetting models are visibly rejectable. Removing PSF blur fits nearly as well and improves coarse-grid source L2 from %.3f to %.3f. The supported claim is calibration sensitivity, not that every optical stage is indispensable." % (cf["rel_l2"], cdata["results"]["no_psf"]["rel_l2"]), M + col + 16, y, col)
+    p(pdf, "<b>Positive evidence.</b> The calibrated arm is useful on 12/12 scenes. Emissivity mismatch raises absolute power error on 12/12 pairs by a median <b>%.2f points</b>; the deterministic paired-bootstrap 95%% interval is %.2f-%.2f points." % (100 * dpair["median"], dci[0], dci[1]), M, y, col)
+    p(pdf, "<b>Negative verdict retained.</b> The stronger preregistered risk claim required at least 6/12 mismatches to be both plausible and at least five points harmful. Only <b>%d/12</b> qualify, so that claim is <b>not accepted</b>." % d["materially_harmful_plausible_mismatch_count"], M + col + 16, y, col)
+    evidence_y = 272
+    section_rule(pdf, evidence_y + 28)
+    p(pdf, "Why this bank is hard to game", M, evidence_y + 15, W - 2 * M, H2)
+    p(pdf, "<b>Sealed scenes.</b> Development uses seeds 0-2; the reported bank is exactly 101-112. The summarizer refuses missing or extra seed artifacts and uses a fixed bootstrap seed.", M, evidence_y - 3, col, SMALL)
+    p(pdf, "<b>Absolute validation.</b> A held-out fit must satisfy RMS <=4 counts, |mean| <=0.5 counts, and both lag-1 residual correlations <=0.10. Closeness to the calibrated arm is never a plausibility test.", M + col + 16, evidence_y - 3, col, SMALL)
+    p(pdf, "<b>Representability audit.</b> The original exact-source coarse oracle missed fine-grid pixels by 51 counts. Known-load calibration reduced the development oracle to about 2 counts before the bank was opened; the source was not optimized to conceal the discrepancy.", M, evidence_y - 64, col, SMALL)
+    p(pdf, "<b>Physical diagnosis.</b> Gates use millimetres and total power, not only source-vector L2. Every optimizer converged, all raw JSON/NPZ pairs and logs are committed, and the final animation uses a real bank trajectory.", M + col + 16, evidence_y - 64, col, SMALL)
     pdf.showPage()
 
     # Page 4 - previous result, limits, reproducibility.
@@ -223,11 +238,11 @@ def main() -> None:
     yl = p(pdf, "Same-grid source recovery", M, yl, col, H2)
     yl = p(pdf, "Experiment B v2 recovers the two-hotspot map at relative L2 %.4f, centroid %.2f cells, and power %.3f. A frozen-viscosity forward model ends at L2 %.4f. Both L-BFGS-B arms reach the 250-iteration limit; the comparison is a budget-matched model-mismatch endpoint, not a gradient-only intervention or convergence floor." % (rc["rel_l2"], rc["centroid_shift_cells"], rc["total_power_ratio"], ro["rel_l2"]), M, yl, col)
     yl -= 8
-    yl = p(pdf, "Independent-grid stress test", M, yl, col, H2)
-    yl = p(pdf, "With 64x32 truth and 32x16 inversion, calibrated source L2 rises to %.3f and pixel RMS to %.2f counts. The old %.4f accuracy is therefore not robust to discretization mismatch. Centroid and power remain useful diagnostic summaries, but exact source shape is ill-conditioned from one blurred image." % (cf["rel_l2"], cf["pixel_rms_counts"], rc["rel_l2"]), M, yl, col)
+    yl = p(pdf, "Historical stress test", M, yl, col, H2)
+    yl = p(pdf, "Experiment C first exposed the inverse crime: with 64x32 truth and 32x16 inversion, calibrated source L2 rose to %.3f and pixel RMS to %.2f counts. Its relative calibration-shift gate passed, but the absolute noise-level gate failed. Experiment D repairs representability with independent known-load calibration rather than hiding discrepancy in the source." % (cf["rel_l2"], cf["pixel_rms_counts"]), M, yl, col)
     yl -= 8
     yl = p(pdf, "Limitations", M, yl, col, H2)
-    p(pdf, "Measurements remain synthetic; one image underdetermines a 512-value source; calibration uncertainty is represented by one fixed mismatch rather than a posterior; material and camera physics are prototype-grade rather than instrument-grade; and four of five Experiment C optimizers stop at their budget. Real calibrated imagery, transient or multi-view data, held-out source families, and uncertainty maps are the next validation layer.", M, yl, col)
+    p(pdf, "Measurements remain synthetic; the chip footprint is known; calibration uncertainty is represented by one fixed mismatch rather than a posterior; and material/camera physics are prototype-grade rather than instrument-grade. Real calibrated imagery, transient data, unknown supports, and posterior uncertainty maps are the next validation layer.", M, yl, col)
 
     xr = M + col + 16
     yr = y
@@ -240,8 +255,9 @@ def main() -> None:
         "make judge",
         "make verify",
         "make verify-containers",
-        "make experiment-c",
-        "make figures renderer-figure landing",
+        "make summarize-experiment-d",
+        "make animation",
+        "make paper landing",
     ]
     yy = yr - 18
     pdf.setFont("Courier", 7.1); pdf.setFillColor(INK)
@@ -252,7 +268,7 @@ def main() -> None:
     yr = p(pdf, "Mode: <b>%s</b><br/>Best FD error: <b>%.2e</b><br/>Runtime: %.0f s<br/>Source: %s<br/>Four immutable image IDs are stored in the JSON artifact." % (container["execution_mode"], container["best_rel_err"], container["seconds"], container["source_commit"][:12]), xr, yr, col)
     yr -= 8
     yr = p(pdf, "Artifact map", xr, yr, col, H2)
-    p(pdf, "Protocol: writeup/RENDERER_PROTOCOL.md<br/>Renderer result: figures/experiment_c_renderer.json<br/>Container receipt: figures/container_e2e_gradient_check.json<br/>Full narrative: writeup/WRITEUP.md<br/>Code and data: github.com/il-miscusi/tesseract-inverse-thermography", xr, yr, col, SMALL)
+    p(pdf, "Frozen protocol: writeup/EXPERIMENT_D_PROTOCOL.md<br/>Bank summary: figures/experiment_d/experiment_d_summary.json<br/>Twelve raw JSON/NPZ pairs: figures/experiment_d/bank/<br/>Container receipt: figures/container_e2e_gradient_check.json<br/>Code: github.com/il-miscusi/tesseract-inverse-thermography", xr, yr, col, SMALL)
 
     matrix_y = 420
     section_rule(pdf, matrix_y + 25)
@@ -260,9 +276,9 @@ def main() -> None:
     claims = [
         ["claim", "direct evidence", "boundary"],
         ["Cross-framework derivative is correct", "two end-to-end FD receipts", "directional checks, small grids"],
-        ["Calibration sensitivity under model discrepancy", "Experiment C, +1.82-cell shift", "fits above noise scale"],
+        ["Composed inverse generalizes", "Experiment D, 12/12 useful", "synthetic, known support"],
+        ["4% emissivity biases inferred power", "12/12 pairs; +4.42 pp median", "harm prevalence claim failed"],
         ["Coupled model improves same-grid recovery", "Experiment B v2, 0.137 vs 0.246 L2", "both arms hit budget"],
-        ["Every optical stage is necessary", "not supported: no-PSF is negative", "claim rejected"],
     ]
     draw_table(pdf, claims, M, matrix_y - 2, [166, 190, 155], font_size=6.8)
     applications_y = 292

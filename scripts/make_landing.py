@@ -24,7 +24,8 @@ ASSETS = DOCS / "assets"
 REPO_URL = "https://github.com/il-miscusi/tesseract-inverse-thermography"
 
 FIGS = ("hero.png", "chain.png", "recovery_convergence.png",
-        "radiometry.png", "renderer_necessity.png", "recovery.gif")
+        "radiometry.png", "renderer_necessity.png",
+        "experiment_d_generalization.png", "recovery.gif")
 
 
 def fmt(x: float, nd: int = 3) -> str:
@@ -38,6 +39,7 @@ def main() -> None:
     ap.add_argument("--gradcheck", default="figures/e2e_gradient_check.json")
     ap.add_argument("--renderer-results", default="figures/experiment_c_renderer.json")
     ap.add_argument("--container-check", default="figures/container_e2e_gradient_check.json")
+    ap.add_argument("--experiment-d", default="figures/experiment_d/experiment_d_summary.json")
     args = ap.parse_args()
 
     b = json.loads((ROOT / args.results).read_text())
@@ -45,6 +47,7 @@ def main() -> None:
     g = json.loads((ROOT / args.gradcheck).read_text())
     c = json.loads((ROOT / args.renderer_results).read_text())
     container = json.loads((ROOT / args.container_check).read_text())
+    d = json.loads((ROOT / args.experiment_d).read_text())
     rc, ro = b["results"]["coupled"], b["results"]["one_way"]
 
     ASSETS.mkdir(parents=True, exist_ok=True)
@@ -63,6 +66,9 @@ def main() -> None:
     cf = c["results"]["full"]
     cm = c["results"]["calibration_mismatch"]
     centroid_excess = cm["centroid_shift_cells"] - cf["centroid_shift_cells"]
+    dfull = d["arms"]["full"]
+    dpair = d["paired_diagnostic_error"]["total_power_relative_error"]
+    dci = [100 * value for value in dpair["median_bootstrap_95_ci"]]
 
     gif_html = (f'<img src="assets/recovery.gif" alt="Recovery animation" loading="lazy">'
                 if have["recovery.gif"] else "")
@@ -132,7 +138,7 @@ def main() -> None:
     <b>Track 05 · Differentiable graphics &amp; rendering</b>
     <div>
       <a href="#chain">the chain</a>
-      <a href="#results">results</a>
+      <a href="#generalization">evidence</a>
       <a href="#renderer">the renderer</a>
       <a href="{REPO_URL}">repository</a>
     </div>
@@ -148,7 +154,7 @@ def main() -> None:
       Then we asked one noisy rendered frame a question no framework can answer alone:
       <b>which part of the chip is overheating?</b> The gradient that answers it runs from
       pixels, back through the renderer, through an implicit-function-theorem adjoint
-      spanning three AD systems and hand-written Fortran, to the volumetric heat source.</p>
+      spanning three native derivative regimes and hand-written Fortran, to the volumetric heat source.</p>
   </header>
 
   <figure>
@@ -161,10 +167,10 @@ def main() -> None:
   <div class="cards">
     <div class="card"><div class="big">{g['best_rel_err']:.1e}</div>
       <div class="lbl">end-to-end gradient vs finite differences (pixels &rarr; q), verdict {g['verdict']}</div></div>
-    <div class="card"><div class="big">{rc['adjoint_matvecs_total']}</div>
-      <div class="lbl">adjoint GMRES matvecs across {b['optimizer']['coupled']['nfev']} objective evaluations — each one a VJP chain over three components</div></div>
-    <div class="card"><div class="big">{loss_gap:,.2f}&times;</div>
-      <div class="lbl">final recorded image-space loss gap: coupled vs frozen-viscosity model, same recovery budget</div></div>
+    <div class="card"><div class="big">{dfull['operationally_useful_count']}/12</div>
+      <div class="lbl">operationally useful diagnoses on the frozen unseen-scene bank</div></div>
+    <div class="card"><div class="big">{100 * dpair['median']:.2f} pp</div>
+      <div class="lbl">paired median power-error increase from only 4% emissivity error; 12/12 same direction</div></div>
     <div class="card"><div class="big">{container['best_rel_err']:.1e}</div>
       <div class="lbl">finite-difference error through four served containers · {container['seconds']:.0f} s · {container['verdict']}</div></div>
   </div>
@@ -180,7 +186,27 @@ def main() -> None:
      relative error.</p>
   <figure><img src="assets/chain.png" alt="Differentiable chain diagram"></figure>
 
-  <h2 id="results">Results: the coupling is load-bearing</h2>
+  <h2 id="generalization">Frozen-bank evidence, including the negative verdict</h2>
+  <p>Twelve fault scenes stayed sealed until the method, two-view training,
+     held-out third view, absolute pixel gate, and 4% emissivity mismatch were fixed.
+     Truth runs at 64&times;32 and inversion at 32&times;16. The calibrated arm is
+     operationally useful on <b>{dfull['operationally_useful_count']}/12</b> scenes and
+     passes every held-out residual check on <b>{dfull['absolute_plausible_fit_count']}/12</b>.
+     Median held-out RMS is {dfull['metrics']['holdout_rms_counts']['median']:.3f} counts
+     at a 2-count noise floor; median centroid error is
+     {dfull['metrics']['centroid_error_mm']['median']:.3f}&nbsp;mm.</p>
+  <p>A fixed 4% emissivity underestimate increases absolute total-power error on
+     <b>{dpair['full_lower_error_count']}/12</b> paired scenes. The median increase is
+     <b>{100 * dpair['median']:.2f} percentage points</b> (deterministic paired-bootstrap
+     95% interval {dci[0]:.2f}&ndash;{dci[1]:.2f}). The preregistered stronger claim is
+     <b>not accepted</b>: only {d['materially_harmful_plausible_mismatch_count']}/12,
+     short of 6/12, were both independently plausible and at least five points harmful.
+     No scene or failed arm is excluded.</p>
+  <figure><img src="assets/experiment_d_generalization.png" alt="Paired unseen-scene source power error and held-out residuals">
+    <figcaption>Experiment D. Every point is a frozen scene; red mismatch markers fail
+      at least one independent plausibility condition, even when RMS alone is below 2&sigma;.</figcaption></figure>
+
+  <h2 id="results">Mechanism check: the coupling is load-bearing</h2>
   <p>Two recoveries share data, prior, optimizer, and budget. The second uses a
      deliberately simplified frozen-viscosity forward model and its matching derivative;
      the comparison therefore measures model mismatch, not a gradient-only intervention.</p>
@@ -227,9 +253,9 @@ def main() -> None:
     Tesseract Hackathon 2026 &middot; Track 05 &middot;
     <a href="{REPO_URL}">source</a> &middot;
     <a href="{REPO_URL}/blob/main/output/pdf/tesseract_inverse_thermography.pdf">paper</a> &middot;
-    <a href="{REPO_URL}/blob/main/writeup/PROTOCOL.md">pre-registered protocol</a> &middot;
+    <a href="{REPO_URL}/blob/main/writeup/EXPERIMENT_D_PROTOCOL.md">frozen-bank protocol</a> &middot;
     Apache-2.0. Every figure on this page regenerates from committed artifacts with
-    <code>make figures renderer-figure landing</code>.
+    <code>make summarize-experiment-d figures renderer-figure landing</code>.
   </footer>
 </div>
 </body>

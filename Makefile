@@ -1,5 +1,5 @@
 # Tesseract Hackathon 2026 - Track 05 primary entry
-.PHONY: build build-images judge test verify verify-containers experiment-a experiment-b experiment-b-v2 experiment-c calibrate-multifidelity experiment-d-dev audit figures renderer-figure paper animation landing
+.PHONY: build build-images judge test verify verify-containers experiment-a experiment-b experiment-b-v2 experiment-c calibrate-multifidelity experiment-d-dev summarize-experiment-d audit figures renderer-figure paper animation landing
 
 PYTHON ?= python3
 TESSERACT ?= tesseract
@@ -11,7 +11,7 @@ FORTRAN_BIN := $(FORTRAN_DIR)/darcy
 FIELDS ?= figures/experiment_b_v2_fields.npz
 RESULTS ?= figures/experiment_b_v2.json
 EXPA ?= figures/experiment_a.json
-SNAPSHOTS ?=
+SNAPSHOTS ?= figures/experiment_d/bank/bank_seed_101.npz
 
 figures:
 	COUPLER_INPROCESS=1 DARCY_SOLVER_BIN="$(CURDIR)/tesseracts/darcy-flow/fortran/darcy" \
@@ -24,9 +24,8 @@ paper:
 	"$(PYTHON)" scripts/make_paper.py
 
 animation:
-	COUPLER_INPROCESS=1 DARCY_SOLVER_BIN="$(CURDIR)/tesseracts/darcy-flow/fortran/darcy" \
-	OMP_NUM_THREADS=1 \
-	"$(PYTHON)" scripts/make_animation.py $(if $(SNAPSHOTS),--snapshots $(SNAPSHOTS),--demo)
+	"$(PYTHON)" scripts/make_animation.py --snapshots $(SNAPSHOTS) \
+		--label "frozen unseen scene 101 · calibrated arm"
 
 landing:
 	"$(PYTHON)" scripts/make_landing.py --results $(RESULTS) --expa $(EXPA)
@@ -81,6 +80,9 @@ calibrate-multifidelity:
 	COUPLER_INPROCESS=1 DARCY_SOLVER_BIN="$(CURDIR)/tesseracts/darcy-flow/fortran/darcy" \
 	OMP_NUM_THREADS=1 \
 	"$(PYTHON)" scripts/calibrate_multifidelity.py
+
+summarize-experiment-d:
+	"$(PYTHON)" scripts/summarize_experiment_d.py
 
 audit:
 	"$(PYTHON)" scripts/submission_audit.py

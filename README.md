@@ -81,7 +81,7 @@ composition at **1.14e-07** relative error in 80 seconds. It records all four
 image IDs, execution mode, and source commit in
 [`figures/container_e2e_gradient_check.json`](figures/container_e2e_gradient_check.json).
 
-The fast suite adds 18 independent gates: Planck monotonicity,
+The fast suite adds independent gates for Planck monotonicity,
 emissivity/reflection limits, homography round trips, bilinear sampling, PSF
 normalisation, vignetting, rendering behaviour, a temperature-VJP
 finite-difference check, source metrics, regularisation, and optimisation
@@ -128,7 +128,36 @@ seed-and-configuration-stamped artifacts in
 [`figures/experiment_b.json`](figures/experiment_b.json), with the recovered
 field arrays in the matching NPZ files.
 
-**C — renderer sensitivity under independent discretization.** Observations
+**D — frozen unseen-scene bank (headline evidence).** Twelve fault scenes
+(seeds 101–112) were held out until the method, mismatch, and absolute gates
+were frozen in [`writeup/EXPERIMENT_D_PROTOCOL.md`](writeup/EXPERIMENT_D_PROTOCOL.md).
+Truth uses a 64×32 coupled solve, inversion uses 32×16, and two camera poses
+train the source while a third pose is held out. A known-load, 20-column
+multi-fidelity discrepancy tangent is calibrated independently of every fault
+scene and differentiated directly into the source VJP.
+
+- The calibrated arm produced an operationally useful diagnosis on **12/12**
+  unseen scenes and passed the absolute held-out residual gate on **10/12**.
+  Median held-out RMS was **2.014 counts** (sensor noise σ=2), median centroid
+  error **0.088 mm**, and median total-power error **0.153%**.
+- A fixed 4% emissivity error increased absolute total-power error on **12/12**
+  paired scenes. The median increase was **4.42 percentage points**, with a
+  deterministic 10,000-resample paired bootstrap 95% interval of
+  **3.28–4.88 points**.
+- The preregistered headline calibration-risk claim is **not accepted**:
+  only **1/12**, not the required 6/12, mismatches were both independently
+  plausible and at least five percentage points harmful. This negative verdict
+  is part of the result, not an omitted run.
+
+The supported result is stronger and narrower: the composed inverse system
+generalizes across a frozen scene bank, and a small emissivity error introduces
+a consistent power bias, but this experiment did not clear its deliberately
+strict material-harm prevalence threshold.
+
+![Frozen 12-scene generalization bank](figures/experiment_d_generalization.png)
+
+**C — renderer sensitivity under independent discretization (historical stress
+test).** Observations
 come from a 64×32 coupled solve and inversion runs at 32×16, eliminating the
 same-grid inverse crime. Five budget-matched recoveries vary only the assumed
 camera. The calibrated renderer localizes the source centroid within **0.78
@@ -174,6 +203,8 @@ make verify-containers # build/serve 4 images + FD across real boundaries
 make experiment-a  # camera self-calibration
 make experiment-b-v2 # amended source recovery through the coupled equilibrium
 make experiment-c  # renderer necessity with 64x32 truth / 32x16 inversion
+make summarize-experiment-d # reproduce frozen-bank statistics and figure
+make animation     # animate a real frozen-bank recovery (seed 101)
 make paper         # regenerate the four-page PDF from committed artifacts
 ```
 

@@ -1,0 +1,71 @@
+{
+  "grid": [
+    8,
+    4
+  ],
+  "sensor": [
+    24,
+    16
+  ],
+  "seed": 0,
+  "coupling_scale": 1.0,
+  "one_way": false,
+  "execution_mode": "served_containers",
+  "images": {
+    "darcy": "darcy-flow:latest",
+    "heat": "heat-transport:latest",
+    "closure": "viscosity-closure:latest",
+    "camera": "thermal-camera:latest"
+  },
+  "image_ids": {
+    "darcy": "sha256:8501f6e5aa1de11d6cd785557ca6a001dc92e600c8daf2560983ca3e7ca9d319",
+    "heat": "sha256:dbf7ee08cada4bcec6af8bf2594375aa97b0a44371e98756ebba8a022d5927f0",
+    "closure": "sha256:1dbfe0a92ce8b6166c1c26f194f2e23daa15f1e210134c70310a9120b3e80479",
+    "camera": "sha256:a8c9030bc8e4886df2ea850b227d5e08f217eaf891f07f2d1fd159b887dd0321"
+  },
+  "source_commit": "47095df0b8896e4be874644ca565cf400f3ea3c8",
+  "loss": 1877.8112064014274,
+  "grad_norm": 0.0011113684534146786,
+  "adjoint_matvecs": 7,
+  "fd_table": [
+    {
+      "eps_frac": 0.001,
+      "fd": -0.00022782421420103067,
+      "ad": -0.00022782332287433124,
+      "rel_err": 3.912344008553188e-06
+    },
+    {
+      "eps_frac": 0.0003,
+      "fd": -0.00022782339724226408,
+      "ad": -0.00022782332287433124,
+      "rel_err": 3.264279865288159e-07
+    },
+    {
+      "eps_frac": 0.0001,
+      "fd": -0.0002278233315824006,
+      "ad": -0.00022782332287433124,
+      "rel_err": 3.822290415605701e-08
+    },
+    {
+      "eps_frac": 3e-05,
+      "fd": -0.00022782348667765796,
+      "ad": -0.00022782332287433124,
+      "rel_err": 7.189922738552817e-07
+    },
+    {
+      "eps_frac": 1e-05,
+      "fd": -0.0002278234496537455,
+      "ad": -0.00022782332287433124,
+      "rel_err": 5.564809699946221e-07
+    },
+    {
+      "eps_frac": 1e-06,
+      "fd": -0.00022781952483001079,
+      "ad": -0.00022782332287433124,
+      "rel_err": 1.6671285410180702e-05
+    }
+  ],
+  "best_rel_err": 3.822290415605701e-08,
+  "verdict": "PASS",
+  "seconds": 23.68753480911255
+}

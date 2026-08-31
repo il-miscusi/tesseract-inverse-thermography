@@ -81,6 +81,21 @@ composition at **1.14e-07** relative error in 80 seconds. It records all four
 image IDs, execution mode, and source commit in
 [`figures/container_e2e_gradient_check.json`](figures/container_e2e_gradient_check.json).
 
+The four component images are also published to GHCR with immutable digests
+([`figures/ghcr_digests.json`](figures/ghcr_digests.json)); a public CI job
+([containers workflow](https://github.com/il-miscusi/tesseract-inverse-thermography/actions/runs/33379099638))
+builds them, pushes them, **re-pulls them by digest**, serves all four, and
+reruns the end-to-end finite-difference gate against the pulled images —
+PASS at **3.8e-08** relative error
+([`figures/container_e2e_gradient_check_ghcr.json`](figures/container_e2e_gradient_check_ghcr.json)).
+
+| component | GHCR digest |
+|---|---|
+| darcy-flow | `sha256:30940989384dee4c63abd667f593342e110157f38fefe3b20edf66572e20136c` |
+| heat-transport | `sha256:a8a2cbdafaf8e394bb17f86a520be32da45c7dcffabca9c2d25abedfc915cdcc` |
+| viscosity-closure | `sha256:9d3b1e593edae3e2a109930310e5acd764dafe3d660ea6931e5dac0a5436ef9a` |
+| thermal-camera | `sha256:eaf5d325c61a6daaa2ad9a00afe979d34f38b1fa3209f8600ffd908e2346888c` |
+
 The fast suite adds independent gates for Planck monotonicity,
 emissivity/reflection limits, homography round trips, bilinear sampling, PSF
 normalisation, vignetting, rendering behaviour, a temperature-VJP

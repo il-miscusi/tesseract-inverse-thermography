@@ -1,0 +1,6 @@
+{
+  "darcy-flow": "ghcr.io/il-miscusi/tesseract-inverse-thermography/darcy-flow@sha256:30940989384dee4c63abd667f593342e110157f38fefe3b20edf66572e20136c",
+  "heat-transport": "ghcr.io/il-miscusi/tesseract-inverse-thermography/heat-transport@sha256:a8a2cbdafaf8e394bb17f86a520be32da45c7dcffabca9c2d25abedfc915cdcc",
+  "viscosity-closure": "ghcr.io/il-miscusi/tesseract-inverse-thermography/viscosity-closure@sha256:9d3b1e593edae3e2a109930310e5acd764dafe3d660ea6931e5dac0a5436ef9a",
+  "thermal-camera": "ghcr.io/il-miscusi/tesseract-inverse-thermography/thermal-camera@sha256:eaf5d325c61a6daaa2ad9a00afe979d34f38b1fa3209f8600ffd908e2346888c"
+}

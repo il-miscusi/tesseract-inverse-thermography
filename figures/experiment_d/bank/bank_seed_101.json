@@ -1,0 +1,138 @@
+{
+  "protocol": "writeup/EXPERIMENT_D_PROTOCOL.md",
+  "stage": "bank",
+  "seed": 101,
+  "inverse_grid": [
+    32,
+    16
+  ],
+  "truth_grid": [
+    64,
+    32
+  ],
+  "train_tilts": [
+    0.22,
+    -0.18
+  ],
+  "holdout_tilt": 0.05,
+  "noise_counts": 2.0,
+  "problem_seed": 73,
+  "source_blobs": [
+    {
+      "cx": 0.46344946866880904,
+      "cy": 0.08563248707729794,
+      "wx": 0.03396451100119412,
+      "wy": 0.01876955690752935,
+      "amplitude": 1.4804531177806228
+    },
+    {
+      "cx": 0.596026201616428,
+      "cy": 0.047772458366147054,
+      "wx": 0.044275773995088134,
+      "wy": 0.01716405960690802,
+      "amplitude": 1.37494628113531
+    }
+  ],
+  "support_cells": 20,
+  "coarse_source_oracle": {
+    "train_rms_counts": 2.076675710726065,
+    "holdout_residual": {
+      "rms_counts": 2.0839826198088955,
+      "mean_counts": -0.5716518318799576,
+      "lag1_horizontal": 0.011434005286193726,
+      "lag1_vertical": 0.03633171190115535,
+      "pixels": 4640
+    },
+    "holdout_rms_noise_sigmas": 1.0419913099044478
+  },
+  "results": {
+    "full": {
+      "rel_l2": 0.49477711272577407,
+      "amplitude_ratio": 0.9271888152455727,
+      "centroid_shift_cells": 0.04059170591814426,
+      "total_power_ratio": 1.0019136831175406,
+      "centroid_error_mm": 0.025369816198840624,
+      "peak_error_mm": 0.0,
+      "wasserstein_mm": 0.21139682411495653,
+      "total_power_rel_error": 0.0019136831175405877,
+      "train_residual": {
+        "rms_counts": 1.9916171477247755,
+        "mean_counts": -0.008025009368872188,
+        "pixels": 9098
+      },
+      "holdout_residual": {
+        "rms_counts": 2.001948732139848,
+        "mean_counts": 0.0033891601649593175,
+        "lag1_horizontal": 0.009085858144268906,
+        "lag1_vertical": 0.03467271182675954,
+        "pixels": 4640
+      },
+      "holdout_rms_noise_sigmas": 1.000974366069924,
+      "absolute_plausible_fit": true,
+      "operationally_useful_diagnosis": true,
+      "optimizer": {
+        "nit": 131,
+        "nfev": 175,
+        "status": 0,
+        "message": "CONVERGENCE: RELATIVE REDUCTION OF F <= FACTR*EPSMCH",
+        "converged": true
+      },
+      "adjoint_matvecs_total": 1049,
+      "camera_assumption": {
+        "psf_sigma": 1.2,
+        "gain": 25.0,
+        "offset": 500.0,
+        "t_ambient": 295.0,
+        "half_fov_tan": 0.45,
+        "tilt_delta": 0.0,
+        "pose_dx_fraction": 0.0,
+        "emissivity_scale": 1.0
+      }
+    },
+    "mismatch": {
+      "rel_l2": 0.5126738653857301,
+      "amplitude_ratio": 0.7177348919368578,
+      "centroid_shift_cells": 0.08810305442937559,
+      "total_power_ratio": 1.0458706338536592,
+      "centroid_error_mm": 0.0550644090183633,
+      "peak_error_mm": 0.0,
+      "wasserstein_mm": 0.23847437980336433,
+      "total_power_rel_error": 0.04587063385365919,
+      "train_residual": {
+        "rms_counts": 2.0154737896145,
+        "mean_counts": -0.0245666494429251,
+        "pixels": 9098
+      },
+      "holdout_residual": {
+        "rms_counts": 2.022904755305292,
+        "mean_counts": -0.014759404925923758,
+        "lag1_horizontal": 0.02712367496043,
+        "lag1_vertical": 0.05282457276780234,
+        "pixels": 4640
+      },
+      "holdout_rms_noise_sigmas": 1.011452377652646,
+      "absolute_plausible_fit": true,
+      "operationally_useful_diagnosis": true,
+      "optimizer": {
+        "nit": 73,
+        "nfev": 100,
+        "status": 0,
+        "message": "CONVERGENCE: RELATIVE REDUCTION OF F <= FACTR*EPSMCH",
+        "converged": true
+      },
+      "adjoint_matvecs_total": 599,
+      "camera_assumption": {
+        "psf_sigma": 1.2,
+        "gain": 25.0,
+        "offset": 500.0,
+        "t_ambient": 295.0,
+        "half_fov_tan": 0.45,
+        "tilt_delta": 0.0,
+        "pose_dx_fraction": 0.0,
+        "emissivity_scale": 0.96
+      }
+    }
+  },
+  "materially_harmful_plausible_mismatch": false,
+  "seconds": 240.18075513839722
+}

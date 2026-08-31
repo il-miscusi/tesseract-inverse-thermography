@@ -1,0 +1,152 @@
+{
+  "protocol": "writeup/EXPERIMENT_D_PROTOCOL.md",
+  "stage": "bank",
+  "seed": 104,
+  "inverse_grid": [
+    32,
+    16
+  ],
+  "truth_grid": [
+    64,
+    32
+  ],
+  "train_tilts": [
+    0.22,
+    -0.18
+  ],
+  "holdout_tilt": 0.05,
+  "noise_counts": 2.0,
+  "problem_seed": 73,
+  "source_blobs": [
+    {
+      "cx": 0.5499585186431103,
+      "cy": 0.034447994540414216,
+      "wx": 0.02138612124440543,
+      "wy": 0.020626593650575748,
+      "amplitude": 1.32849966631303
+    },
+    {
+      "cx": 0.5611488700051956,
+      "cy": 0.05216005342864654,
+      "wx": 0.03541314697528439,
+      "wy": 0.030956721892075153,
+      "amplitude": 0.7096543940794111
+    },
+    {
+      "cx": 0.5099572816158066,
+      "cy": 0.08302853510684169,
+      "wx": 0.040283777491244434,
+      "wy": 0.017039596031348345,
+      "amplitude": 1.0855375863974237
+    },
+    {
+      "cx": 0.46519063240088776,
+      "cy": 0.03888141949932638,
+      "wx": 0.03955491480480206,
+      "wy": 0.02488361812207955,
+      "amplitude": 1.155961027400377
+    }
+  ],
+  "support_cells": 20,
+  "coarse_source_oracle": {
+    "train_rms_counts": 2.0522870198755285,
+    "holdout_residual": {
+      "rms_counts": 1.998190600509087,
+      "mean_counts": 0.09523628708385048,
+      "lag1_horizontal": 0.012932856830420848,
+      "lag1_vertical": 0.01410254626675875,
+      "pixels": 4640
+    },
+    "holdout_rms_noise_sigmas": 0.9990953002545435
+  },
+  "results": {
+    "full": {
+      "rel_l2": 0.3538680194844862,
+      "amplitude_ratio": 0.7937025256146418,
+      "centroid_shift_cells": 0.16540209585304594,
+      "total_power_ratio": 0.9997605595738426,
+      "centroid_error_mm": 0.10337630990815375,
+      "peak_error_mm": 0.625,
+      "wasserstein_mm": 0.12221061829721566,
+      "total_power_rel_error": 0.00023944042615742234,
+      "train_residual": {
+        "rms_counts": 2.0465770949027475,
+        "mean_counts": 0.004862996635597993,
+        "pixels": 9098
+      },
+      "holdout_residual": {
+        "rms_counts": 1.997399617464289,
+        "mean_counts": 0.06131973203738234,
+        "lag1_horizontal": 0.013290503742177157,
+        "lag1_vertical": 0.013116236990273852,
+        "pixels": 4640
+      },
+      "holdout_rms_noise_sigmas": 0.9986998087321445,
+      "absolute_plausible_fit": true,
+      "operationally_useful_diagnosis": true,
+      "optimizer": {
+        "nit": 85,
+        "nfev": 113,
+        "status": 0,
+        "message": "CONVERGENCE: RELATIVE REDUCTION OF F <= FACTR*EPSMCH",
+        "converged": true
+      },
+      "adjoint_matvecs_total": 783,
+      "camera_assumption": {
+        "psf_sigma": 1.2,
+        "gain": 25.0,
+        "offset": 500.0,
+        "t_ambient": 295.0,
+        "half_fov_tan": 0.45,
+        "tilt_delta": 0.0,
+        "pose_dx_fraction": 0.0,
+        "emissivity_scale": 1.0
+      }
+    },
+    "mismatch": {
+      "rel_l2": 0.3592785091281902,
+      "amplitude_ratio": 0.731386837099777,
+      "centroid_shift_cells": 0.13886377368740302,
+      "total_power_ratio": 1.0525390945572108,
+      "centroid_error_mm": 0.08678985855462669,
+      "peak_error_mm": 0.625,
+      "wasserstein_mm": 0.15956482053645868,
+      "total_power_rel_error": 0.05253909455721084,
+      "train_residual": {
+        "rms_counts": 2.1979142315247215,
+        "mean_counts": -0.10815171634584057,
+        "pixels": 9098
+      },
+      "holdout_residual": {
+        "rms_counts": 2.130747624388936,
+        "mean_counts": -0.06615303558400515,
+        "lag1_horizontal": 0.12974323518033107,
+        "lag1_vertical": 0.1308239776342393,
+        "pixels": 4640
+      },
+      "holdout_rms_noise_sigmas": 1.065373812194468,
+      "absolute_plausible_fit": false,
+      "operationally_useful_diagnosis": true,
+      "optimizer": {
+        "nit": 119,
+        "nfev": 165,
+        "status": 0,
+        "message": "CONVERGENCE: RELATIVE REDUCTION OF F <= FACTR*EPSMCH",
+        "converged": true
+      },
+      "adjoint_matvecs_total": 1149,
+      "camera_assumption": {
+        "psf_sigma": 1.2,
+        "gain": 25.0,
+        "offset": 500.0,
+        "t_ambient": 295.0,
+        "half_fov_tan": 0.45,
+        "tilt_delta": 0.0,
+        "pose_dx_fraction": 0.0,
+        "emissivity_scale": 0.96
+      }
+    }
+  },
+  "materially_harmful_plausible_mismatch": false,
+  "seconds": 298.31142807006836
+}

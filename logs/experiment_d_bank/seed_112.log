@@ -1,0 +1,44 @@
+coarse-source oracle: train=10.584 holdout=10.569 counts
+arm full
+    eval    1 loss=2.29610e+04 data=2.29610e+04
+    eval   25 loss=3.63438e+00 data=3.63438e+00
+    eval   50 loss=2.66819e+00 data=2.66819e+00
+    eval   75 loss=2.62676e+00 data=2.62676e+00
+    eval  100 loss=2.58139e+00 data=2.58139e+00
+    eval  125 loss=2.72701e+00 data=2.72701e+00
+    eval  150 loss=2.54320e+00 data=2.54319e+00
+    eval  175 loss=2.54098e+00 data=2.54098e+00
+    eval  200 loss=2.53366e+00 data=2.53366e+00
+    eval  225 loss=2.53037e+00 data=2.53037e+00
+    eval  250 loss=2.52661e+00 data=2.52660e+00
+    eval  275 loss=2.59640e+00 data=2.59639e+00
+    eval  300 loss=2.51607e+00 data=2.51607e+00
+    eval  325 loss=2.51243e+00 data=2.51243e+00
+    eval  350 loss=2.51628e+00 data=2.51628e+00
+    eval  375 loss=2.50757e+00 data=2.50757e+00
+    eval  400 loss=2.50518e+00 data=2.50518e+00
+    eval  425 loss=2.50335e+00 data=2.50335e+00
+  holdout=2.246 counts centroid=0.276 mm W1=0.501 mm plausible=False
+arm mismatch
+    eval    1 loss=2.21028e+04 data=2.21028e+04
+    eval   25 loss=4.17637e+00 data=4.17637e+00
+    eval   50 loss=2.54983e+00 data=2.54983e+00
+    eval   75 loss=2.50883e+00 data=2.50883e+00
+    eval  100 loss=2.49897e+00 data=2.49897e+00
+    eval  125 loss=2.47850e+00 data=2.47850e+00
+    eval  150 loss=2.46695e+00 data=2.46695e+00
+    eval  175 loss=2.46551e+00 data=2.46551e+00
+    eval  200 loss=2.45747e+00 data=2.45747e+00
+    eval  225 loss=2.45531e+00 data=2.45531e+00
+    eval  250 loss=2.45283e+00 data=2.45283e+00
+    eval  275 loss=2.44664e+00 data=2.44664e+00
+    eval  300 loss=2.44196e+00 data=2.44196e+00
+    eval  325 loss=2.43839e+00 data=2.43839e+00
+    eval  350 loss=2.43543e+00 data=2.43543e+00
+    eval  375 loss=2.43308e+00 data=2.43307e+00
+    eval  400 loss=2.42989e+00 data=2.42989e+00
+    eval  425 loss=2.43214e+00 data=2.43214e+00
+    eval  450 loss=2.42622e+00 data=2.42622e+00
+    eval  475 loss=2.42486e+00 data=2.42485e+00
+  holdout=2.204 counts centroid=0.167 mm W1=0.333 mm plausible=False
+wrote /Users/usi/Documents/Documents-MacBook/Personal Projects/tesseract-inverse-thermography/figures/experiment_d/bank/bank_seed_112.json (601s)

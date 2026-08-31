@@ -1,0 +1,25 @@
+coarse-source oracle: train=4.740 holdout=4.756 counts
+arm full
+    eval    1 loss=4.05497e+04 data=4.05497e+04
+    eval   25 loss=3.64773e+00 data=3.64773e+00
+    eval   50 loss=2.41899e+00 data=2.41899e+00
+    eval   75 loss=2.19772e+00 data=2.19772e+00
+    eval  100 loss=2.17992e+00 data=2.17992e+00
+    eval  125 loss=2.17774e+00 data=2.17774e+00
+    eval  150 loss=2.17227e+00 data=2.17227e+00
+    eval  175 loss=2.17078e+00 data=2.17078e+00
+    eval  200 loss=2.17043e+00 data=2.17043e+00
+    eval  225 loss=2.16903e+00 data=2.16903e+00
+    eval  250 loss=2.16707e+00 data=2.16706e+00
+    eval  275 loss=2.16626e+00 data=2.16626e+00
+  holdout=2.080 counts centroid=0.031 mm W1=0.192 mm plausible=True
+arm mismatch
+    eval    1 loss=3.94046e+04 data=3.94046e+04
+    eval   25 loss=3.72876e+00 data=3.72876e+00
+    eval   50 loss=2.43216e+00 data=2.43216e+00
+    eval   75 loss=2.21201e+00 data=2.21201e+00
+    eval  100 loss=2.18938e+00 data=2.18938e+00
+    eval  125 loss=2.18780e+00 data=2.18780e+00
+    eval  150 loss=2.18553e+00 data=2.18553e+00
+  holdout=2.083 counts centroid=0.012 mm W1=0.124 mm plausible=True
+wrote /Users/usi/Documents/Documents-MacBook/Personal Projects/tesseract-inverse-thermography/figures/experiment_d/bank/bank_seed_107.json (427s)

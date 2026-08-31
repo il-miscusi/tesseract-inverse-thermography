@@ -1,0 +1,145 @@
+{
+  "protocol": "writeup/EXPERIMENT_D_PROTOCOL.md",
+  "stage": "bank",
+  "seed": 106,
+  "inverse_grid": [
+    32,
+    16
+  ],
+  "truth_grid": [
+    64,
+    32
+  ],
+  "train_tilts": [
+    0.22,
+    -0.18
+  ],
+  "holdout_tilt": 0.05,
+  "noise_counts": 2.0,
+  "problem_seed": 73,
+  "source_blobs": [
+    {
+      "cx": 0.38050403975235086,
+      "cy": 0.02605080208478423,
+      "wx": 0.030535167504441563,
+      "wy": 0.0341821727758709,
+      "amplitude": 0.7749193823697678
+    },
+    {
+      "cx": 0.45465734713830247,
+      "cy": 0.032253697031011115,
+      "wx": 0.02668436978036617,
+      "wy": 0.013270698165970698,
+      "amplitude": 1.222323362941292
+    },
+    {
+      "cx": 0.38783098476062283,
+      "cy": 0.10275903536888088,
+      "wx": 0.02208378583078954,
+      "wy": 0.018789395410833614,
+      "amplitude": 0.6966128417955351
+    }
+  ],
+  "support_cells": 20,
+  "coarse_source_oracle": {
+    "train_rms_counts": 2.62074985228548,
+    "holdout_residual": {
+      "rms_counts": 2.6773604247686156,
+      "mean_counts": -1.7113997350587382,
+      "lag1_horizontal": 0.03476466422245494,
+      "lag1_vertical": 0.03992251542365911,
+      "pixels": 4640
+    },
+    "holdout_rms_noise_sigmas": 1.3386802123843078
+  },
+  "results": {
+    "full": {
+      "rel_l2": 0.476986815525463,
+      "amplitude_ratio": 0.7902192094912442,
+      "centroid_shift_cells": 0.2383053890180111,
+      "total_power_ratio": 1.006723565366019,
+      "centroid_error_mm": 0.14894086813625665,
+      "peak_error_mm": 0.625,
+      "wasserstein_mm": 0.22120308451376888,
+      "total_power_rel_error": 0.006723565366018924,
+      "train_residual": {
+        "rms_counts": 2.033540506406602,
+        "mean_counts": -4.127463226090606e-05,
+        "pixels": 9098
+      },
+      "holdout_residual": {
+        "rms_counts": 2.0518455935144146,
+        "mean_counts": -0.07806104509583599,
+        "lag1_horizontal": 0.027039802841473923,
+        "lag1_vertical": 0.031285358213179626,
+        "pixels": 4640
+      },
+      "holdout_rms_noise_sigmas": 1.0259227967572073,
+      "absolute_plausible_fit": true,
+      "operationally_useful_diagnosis": true,
+      "optimizer": {
+        "nit": 90,
+        "nfev": 116,
+        "status": 0,
+        "message": "CONVERGENCE: RELATIVE REDUCTION OF F <= FACTR*EPSMCH",
+        "converged": true
+      },
+      "adjoint_matvecs_total": 695,
+      "camera_assumption": {
+        "psf_sigma": 1.2,
+        "gain": 25.0,
+        "offset": 500.0,
+        "t_ambient": 295.0,
+        "half_fov_tan": 0.45,
+        "tilt_delta": 0.0,
+        "pose_dx_fraction": 0.0,
+        "emissivity_scale": 1.0
+      }
+    },
+    "mismatch": {
+      "rel_l2": 0.47377623104129957,
+      "amplitude_ratio": 0.9383087310021807,
+      "centroid_shift_cells": 0.2551763039201365,
+      "total_power_ratio": 1.041596546369989,
+      "centroid_error_mm": 0.15948518995008484,
+      "peak_error_mm": 0.625,
+      "wasserstein_mm": 0.22650438788168167,
+      "total_power_rel_error": 0.041596546369988996,
+      "train_residual": {
+        "rms_counts": 2.0539986049908037,
+        "mean_counts": 0.007635701015038815,
+        "pixels": 9098
+      },
+      "holdout_residual": {
+        "rms_counts": 2.067717388338079,
+        "mean_counts": -0.0669126453985546,
+        "lag1_horizontal": 0.04055759883216797,
+        "lag1_vertical": 0.045910077302746724,
+        "pixels": 4640
+      },
+      "holdout_rms_noise_sigmas": 1.0338586941690395,
+      "absolute_plausible_fit": true,
+      "operationally_useful_diagnosis": true,
+      "optimizer": {
+        "nit": 52,
+        "nfev": 73,
+        "status": 0,
+        "message": "CONVERGENCE: RELATIVE REDUCTION OF F <= FACTR*EPSMCH",
+        "converged": true
+      },
+      "adjoint_matvecs_total": 437,
+      "camera_assumption": {
+        "psf_sigma": 1.2,
+        "gain": 25.0,
+        "offset": 500.0,
+        "t_ambient": 295.0,
+        "half_fov_tan": 0.45,
+        "tilt_delta": 0.0,
+        "pose_dx_fraction": 0.0,
+        "emissivity_scale": 0.96
+      }
+    }
+  },
+  "materially_harmful_plausible_mismatch": false,
+  "seconds": 198.40152406692505
+}

@@ -1,0 +1,145 @@
+{
+  "protocol": "writeup/EXPERIMENT_D_PROTOCOL.md",
+  "stage": "bank",
+  "seed": 103,
+  "inverse_grid": [
+    32,
+    16
+  ],
+  "truth_grid": [
+    64,
+    32
+  ],
+  "train_tilts": [
+    0.22,
+    -0.18
+  ],
+  "holdout_tilt": 0.05,
+  "noise_counts": 2.0,
+  "problem_seed": 73,
+  "source_blobs": [
+    {
+      "cx": 0.42832273788277236,
+      "cy": 0.031380875528487465,
+      "wx": 0.04122482343102267,
+      "wy": 0.0317234772327485,
+      "amplitude": 0.7432061902224263
+    },
+    {
+      "cx": 0.4451633576549023,
+      "cy": 0.07454145652316607,
+      "wx": 0.03693498561798951,
+      "wy": 0.022089640071749725,
+      "amplitude": 1.08326594336793
+    },
+    {
+      "cx": 0.5623956175287717,
+      "cy": 0.054506768630837046,
+      "wx": 0.04391656664164165,
+      "wy": 0.019117557982236324,
+      "amplitude": 0.7506268575726043
+    }
+  ],
+  "support_cells": 20,
+  "coarse_source_oracle": {
+    "train_rms_counts": 1.9892082281023709,
+    "holdout_residual": {
+      "rms_counts": 1.999123365972411,
+      "mean_counts": 0.08396061191946465,
+      "lag1_horizontal": -0.0061265646502954695,
+      "lag1_vertical": 0.0033779063830115847,
+      "pixels": 4640
+    },
+    "holdout_rms_noise_sigmas": 0.9995616829862055
+  },
+  "results": {
+    "full": {
+      "rel_l2": 0.258169352224731,
+      "amplitude_ratio": 1.096687225703613,
+      "centroid_shift_cells": 0.12410475050690953,
+      "total_power_ratio": 0.9997153532804777,
+      "centroid_error_mm": 0.07756546906681895,
+      "peak_error_mm": 0.8838834764831844,
+      "wasserstein_mm": 0.09861411454896696,
+      "total_power_rel_error": 0.0002846467195223301,
+      "train_residual": {
+        "rms_counts": 1.9869004692083612,
+        "mean_counts": -0.0066712009757629075,
+        "pixels": 9098
+      },
+      "holdout_residual": {
+        "rms_counts": 1.9998540188669607,
+        "mean_counts": 0.004587167477125257,
+        "lag1_horizontal": -0.003828845395016352,
+        "lag1_vertical": 0.004145409876641344,
+        "pixels": 4640
+      },
+      "holdout_rms_noise_sigmas": 0.9999270094334803,
+      "absolute_plausible_fit": true,
+      "operationally_useful_diagnosis": true,
+      "optimizer": {
+        "nit": 68,
+        "nfev": 93,
+        "status": 0,
+        "message": "CONVERGENCE: RELATIVE REDUCTION OF F <= FACTR*EPSMCH",
+        "converged": true
+      },
+      "adjoint_matvecs_total": 557,
+      "camera_assumption": {
+        "psf_sigma": 1.2,
+        "gain": 25.0,
+        "offset": 500.0,
+        "t_ambient": 295.0,
+        "half_fov_tan": 0.45,
+        "tilt_delta": 0.0,
+        "pose_dx_fraction": 0.0,
+        "emissivity_scale": 1.0
+      }
+    },
+    "mismatch": {
+      "rel_l2": 0.2333063081670742,
+      "amplitude_ratio": 1.032332332952443,
+      "centroid_shift_cells": 0.10973565994861834,
+      "total_power_ratio": 1.0475109099326598,
+      "centroid_error_mm": 0.0685847874678866,
+      "peak_error_mm": 0.8838834764831844,
+      "wasserstein_mm": 0.10493813281631709,
+      "total_power_rel_error": 0.04751090993265983,
+      "train_residual": {
+        "rms_counts": 2.0299174794648485,
+        "mean_counts": -0.061742607599952246,
+        "pixels": 9098
+      },
+      "holdout_residual": {
+        "rms_counts": 2.0438271161812716,
+        "mean_counts": -0.05765151254821623,
+        "lag1_horizontal": 0.03665072768654097,
+        "lag1_vertical": 0.04725450308834196,
+        "pixels": 4640
+      },
+      "holdout_rms_noise_sigmas": 1.0219135580906358,
+      "absolute_plausible_fit": true,
+      "operationally_useful_diagnosis": true,
+      "optimizer": {
+        "nit": 60,
+        "nfev": 78,
+        "status": 0,
+        "message": "CONVERGENCE: RELATIVE REDUCTION OF F <= FACTR*EPSMCH",
+        "converged": true
+      },
+      "adjoint_matvecs_total": 527,
+      "camera_assumption": {
+        "psf_sigma": 1.2,
+        "gain": 25.0,
+        "offset": 500.0,
+        "t_ambient": 295.0,
+        "half_fov_tan": 0.45,
+        "tilt_delta": 0.0,
+        "pose_dx_fraction": 0.0,
+        "emissivity_scale": 0.96
+      }
+    }
+  },
+  "materially_harmful_plausible_mismatch": false,
+  "seconds": 165.5308210849762
+}

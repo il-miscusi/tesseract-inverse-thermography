@@ -7,56 +7,81 @@
   <meta name="description" content="A physically based differentiable LWIR thermal-camera renderer, composed with a Fortran/JAX/PyTorch coupled equilibrium: recover the hidden heat source from one noisy image.">
   <meta property="og:title" content="See the heat. Invert the physics.">
   <meta property="og:description" content="A differentiable thermal camera in JAX, welded to a multi-framework coupled PDE equilibrium. One noisy image in, the hidden heat source out.">
+  <meta property="og:image" content="https://il-miscusi.github.io/tesseract-inverse-thermography/assets/hero.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,400;6..72,500;6..72,700&family=Source+Sans+3:wght@400;600;700&display=swap">
   <style>
-    :root { color-scheme: dark; --bg:#0b0e14; --panel:#11151f; --ink:#e8ecf3; --muted:#9aa7b8;
-            --line:#232a38; --accent:#4cc9f0; --amber:#f4a259; --hot:#ff7a3c; }
+    :root { color-scheme:light; --bg:#fdfcfa; --ink:#1c1a17; --muted:#514a3f; --faint:#6b6459;
+            --line:#d9d2c7; --accent:#8a3324; --panel:#0f0d13; --panel-line:#2a2530; --panel-muted:#b8b0a2; }
     * { box-sizing:border-box; }
-    body { margin:0; background:radial-gradient(circle at 80% -10%, #1e1420 0, transparent 40rem), var(--bg);
-           color:var(--ink); font:16px/1.65 ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif; }
+    html { scroll-behavior:smooth; }
+    body { margin:0; background:var(--bg); color:var(--ink);
+           font:16px/1.65 "Source Sans 3","Helvetica Neue",Arial,sans-serif; }
     a { color:var(--accent); }
-    .wrap { width:min(1080px, calc(100% - 2.4rem)); margin:auto; }
-    nav { display:flex; justify-content:space-between; align-items:center; padding:1.1rem 0;
-          border-bottom:1px solid var(--line); }
-    nav b { letter-spacing:.1em; text-transform:uppercase; font-size:.8rem; color:var(--hot); }
-    nav div a { color:var(--muted); text-decoration:none; margin-left:1.1rem; font-size:.88rem; }
-    header { padding:4.5rem 0 2.5rem; }
-    .eyebrow { color:var(--hot); text-transform:uppercase; letter-spacing:.16em; font-weight:700; font-size:.76rem; }
-    h1 { margin:.6rem 0 1rem; font-size:clamp(2.2rem,5.5vw,4.4rem); line-height:1.02; letter-spacing:-.04em; max-width:900px; }
-    .lede { color:var(--muted); font-size:1.08rem; max-width:760px; }
-    .lede b { color:var(--ink); }
-    figure { margin:2.2rem 0; }
-    figure img { width:100%; border:1px solid var(--line); border-radius:10px; display:block; }
-    figcaption { color:var(--muted); font-size:.85rem; margin-top:.55rem; }
-    h2 { font-size:1.5rem; letter-spacing:-.02em; margin:3.2rem 0 .8rem; }
-    p { max-width:760px; } p.note { color:var(--muted); font-size:.9rem; }
-    table { border-collapse:collapse; width:100%; max-width:760px; margin:1.2rem 0; font-size:.92rem; }
-    th, td { text-align:left; padding:.5rem .7rem; border-bottom:1px solid var(--line); }
-    th { color:var(--muted); font-weight:600; font-size:.8rem; text-transform:uppercase; letter-spacing:.06em; }
+    .wrap { width:min(1080px, calc(100% - 3rem)); margin:auto; }
+    nav { display:flex; justify-content:space-between; align-items:baseline; padding:1.7rem 0 1.2rem;
+          border-bottom:3px double var(--ink); }
+    nav b { letter-spacing:.18em; text-transform:uppercase; font-size:.8rem; font-weight:600; }
+    nav div a { color:var(--faint); text-decoration:none; margin-left:1.6rem; font-size:.85rem; letter-spacing:.06em; }
+    nav div a.repo { color:var(--ink); font-weight:600; }
+    header { padding:4.2rem 0 2.6rem; border-bottom:1px solid var(--line); }
+    .eyebrow { color:var(--accent); text-transform:uppercase; letter-spacing:.16em; font-weight:700; font-size:.76rem; }
+    h1 { margin:.8rem 0 1.4rem; font-family:Newsreader,Georgia,"Times New Roman",serif; font-weight:500;
+         font-size:clamp(2.4rem,5.5vw,4.2rem); line-height:1.08; letter-spacing:-.015em; max-width:900px; }
+    .lede { font-family:Newsreader,Georgia,serif; color:var(--muted); font-size:clamp(1.15rem,2vw,1.4rem);
+            line-height:1.5; max-width:800px; }
+    .lede b { color:var(--ink); font-weight:700; }
+    .actions { display:flex; flex-wrap:wrap; gap:.85rem; margin-top:2.1rem; }
+    .button { display:inline-block; padding:.78rem 1.5rem; font-size:.94rem; font-weight:600;
+              text-decoration:none; border:1px solid var(--ink); color:var(--ink); }
+    .button.primary { background:var(--ink); color:var(--bg); }
+    .metrics { display:grid; grid-template-columns:repeat(4,1fr); padding:2.2rem 0; border-bottom:1px solid var(--line); }
+    .metric { border-left:1px solid var(--line); padding:.3rem 1.5rem; }
+    .metric .big { font-family:Newsreader,Georgia,serif; font-weight:500; font-size:clamp(1.6rem,3vw,2.5rem); line-height:1.1; }
+    .metric .lbl { color:var(--faint); font-size:.84rem; margin-top:.45rem; line-height:1.45; }
+    section { padding:3.4rem 0 .6rem; }
+    .fig-eyebrow { font-size:.75rem; letter-spacing:.16em; text-transform:uppercase; color:var(--accent);
+                   font-weight:700; margin:0 0 .7rem; }
+    h2 { margin:0 0 .9rem; font-family:Newsreader,Georgia,serif; font-weight:500;
+         font-size:clamp(1.55rem,3vw,2.15rem); line-height:1.2; letter-spacing:-.01em; }
+    p { max-width:760px; color:var(--muted); }
+    p b { color:var(--ink); }
+    p.note { color:var(--faint); font-size:.9rem; }
+    figure { margin:2rem 0 2.4rem; border:1px solid var(--line); background:var(--panel); padding:1.2rem; }
+    figure img { width:100%; display:block; }
+    figcaption { color:var(--panel-muted); font-size:.85rem; line-height:1.5; margin-top:.8rem;
+                 padding-top:.7rem; border-top:1px solid var(--panel-line); }
+    figcaption b { color:#fdfcfa; }
+    table { border-collapse:collapse; width:100%; max-width:760px; margin:1.4rem 0; font-size:.93rem; }
+    th, td { text-align:left; padding:.55rem .7rem; border-bottom:1px solid var(--line); }
+    th { color:var(--faint); font-weight:600; font-size:.78rem; text-transform:uppercase; letter-spacing:.07em;
+         border-bottom:2px solid var(--ink); }
     td.num { font-variant-numeric:tabular-nums; text-align:right; }
-    td.c { color:var(--accent); } td.o { color:var(--amber); }
-    .cards { display:grid; grid-template-columns:repeat(auto-fit,minmax(215px,1fr)); gap:1rem; margin:1.6rem 0; }
-    .card { background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:1rem 1.1rem; }
-    .card .big { font-size:1.7rem; font-weight:700; letter-spacing:-.03em; color:var(--accent); }
-    .card .lbl { color:var(--muted); font-size:.82rem; margin-top:.2rem; }
-    footer { border-top:1px solid var(--line); margin-top:4rem; padding:1.6rem 0 2.4rem; color:var(--muted); font-size:.85rem; }
+    td.c { color:var(--ink); font-weight:600; } td.o { color:var(--faint); }
+    footer { border-top:3px double var(--ink); margin-top:4rem; padding:1.7rem 0 2.6rem;
+             color:var(--faint); font-size:.85rem; }
+    code { font-size:.85em; }
+    @media (max-width:820px) { .metrics { grid-template-columns:1fr 1fr; row-gap:1.4rem; } nav div { display:none; } }
   </style>
 </head>
 <body>
 <div class="wrap">
   <nav>
-    <b>Track 05 · Differentiable graphics &amp; rendering</b>
+    <b>Tesseract Hackathon 2026 · Track 05 · Differentiable graphics &amp; rendering</b>
     <div>
-      <a href="#chain">the chain</a>
-      <a href="#generalization">evidence</a>
-      <a href="#renderer">the renderer</a>
-      <a href="https://github.com/il-miscusi/tesseract-inverse-thermography">repository</a>
+      <a href="#chain">The chain</a>
+      <a href="#generalization">Evidence</a>
+      <a href="#renderer">The renderer</a>
+      <a class="repo" href="https://github.com/il-miscusi/tesseract-inverse-thermography">Repository &rarr;</a>
     </div>
   </nav>
 
   <header>
-    <div class="eyebrow">Tesseract Hackathon 2026</div>
-    <h1>See the heat.<br>Invert the physics.</h1>
-    <p class="lede">A thermal camera never sees temperature — it sees band-integrated
+    <div class="eyebrow">Inverse rendering through a multiphysics equilibrium</div>
+    <h1>See the heat. Invert the physics.</h1>
+    <p class="lede">A thermal camera never sees temperature, it sees band-integrated
       Planck radiance through emissivity, optics, and a sensor. We built that camera as a
       <b>differentiable JAX Tesseract</b> and welded it to a coupled
       <b>Fortran&thinsp;/&thinsp;JAX&thinsp;/&thinsp;PyTorch</b> cold-plate equilibrium.
@@ -64,108 +89,136 @@
       <b>which part of the chip is overheating?</b> The gradient that answers it runs from
       pixels, back through the renderer, through an implicit-function-theorem adjoint
       spanning three native derivative regimes and hand-written Fortran, to the volumetric heat source.</p>
+    <div class="actions">
+      <a class="button primary" href="https://github.com/il-miscusi/tesseract-inverse-thermography">Explore the repository</a>
+      <a class="button" href="https://github.com/il-miscusi/tesseract-inverse-thermography/blob/main/output/pdf/tesseract_inverse_thermography.pdf">Read the paper</a>
+    </div>
   </header>
 
-  <figure>
-    <img src="assets/hero.png" alt="True source, coupled temperature field, rendered thermal image, recovered source">
-    <figcaption>Left to right: the hidden heat source; the coupled flow–viscosity–temperature
-      equilibrium it drives; the noisy LWIR frame the camera records (digital counts); and the
-      source recovered by gradient descent through the whole chain.</figcaption>
-  </figure>
-
-  <div class="cards">
-    <div class="card"><div class="big">3.6e-07</div>
+  <div class="metrics">
+    <div class="metric"><div class="big">3.6e-07</div>
       <div class="lbl">end-to-end gradient vs finite differences (pixels &rarr; q), verdict PASS</div></div>
-    <div class="card"><div class="big">12/12</div>
+    <div class="metric"><div class="big">12/12</div>
       <div class="lbl">operationally useful diagnoses on the frozen unseen-scene bank</div></div>
-    <div class="card"><div class="big">4.42 pp</div>
+    <div class="metric"><div class="big">4.42 pp</div>
       <div class="lbl">paired median power-error increase from only 4% emissivity error; 12/12 same direction</div></div>
-    <div class="card"><div class="big">1.1e-07</div>
+    <div class="metric"><div class="big">1.1e-07</div>
       <div class="lbl">finite-difference error through four served containers · 80 s · PASS</div></div>
   </div>
 
-  <h2 id="chain">One operational gradient across native stacks</h2>
-  <p>The temperature field solves a fixed point spanning a PyTorch viscosity closure, a
-     Fortran Darcy solver with a pen-and-paper adjoint, and a JAX heat-transport model.
-     The camera renders that equilibrium to counts. Differentiating the composition uses
-     only each component's VJP endpoint: GMRES solves the adjoint system matrix-free, one
-     three-component VJP chain per matvec, then one heat-transport VJP lands the gradient
-     on q. A separate receipt builds and serves all four images, then verifies the complete
-     derivative through real HTTP/container boundaries at 1.1e-07
-     relative error.</p>
-  <figure><img src="assets/chain.png" alt="Differentiable chain diagram"></figure>
+  <section>
+    <div class="fig-eyebrow">Figure 1 · The inversion</div>
+    <h2>One noisy frame, back to the source</h2>
+    <figure>
+      <img src="assets/hero.png" alt="True source, coupled temperature field, rendered thermal image, recovered source">
+      <figcaption><b>Fig. 1</b> · Left to right: the hidden heat source; the coupled flow–viscosity–temperature
+        equilibrium it drives; the noisy LWIR frame the camera records (digital counts); and the
+        source recovered by gradient descent through the whole chain.</figcaption>
+    </figure>
+  </section>
 
-  <h2 id="generalization">Frozen-bank evidence, including the negative verdict</h2>
-  <p>Twelve fault scenes stayed sealed until the method, two-view training,
-     held-out third view, absolute pixel gate, and 4% emissivity mismatch were fixed.
-     Truth runs at 64&times;32 and inversion at 32&times;16. The calibrated arm is
-     operationally useful on <b>12/12</b> scenes and
-     passes every held-out residual check on <b>10/12</b>.
-     Median held-out RMS is 2.014 counts
-     at a 2-count noise floor; median centroid error is
-     0.088&nbsp;mm.</p>
-  <p>A fixed 4% emissivity underestimate increases absolute total-power error on
-     <b>12/12</b> paired scenes. The median increase is
-     <b>4.42 percentage points</b> (deterministic paired-bootstrap
-     95% interval 3.28&ndash;4.88). The preregistered stronger claim is
-     <b>not accepted</b>: only 1/12,
-     short of 6/12, were both independently plausible and at least five points harmful.
-     No scene or failed arm is excluded.</p>
-  <figure><img src="assets/experiment_d_generalization.png" alt="Paired unseen-scene source power error and held-out residuals">
-    <figcaption>Experiment D. Every point is a frozen scene; violet mismatch markers fail
-      at least one independent plausibility condition, even when RMS alone is below 2&sigma;.</figcaption></figure>
+  <section>
+    <div class="fig-eyebrow">Figure 2 · Why Tesseract</div>
+    <h2 id="chain">One operational gradient across native stacks</h2>
+    <p>The temperature field solves a fixed point spanning a PyTorch viscosity closure, a
+       Fortran Darcy solver with a pen-and-paper adjoint, and a JAX heat-transport model.
+       The camera renders that equilibrium to counts. Differentiating the composition uses
+       only each component's VJP endpoint: GMRES solves the adjoint system matrix-free, one
+       three-component VJP chain per matvec, then one heat-transport VJP lands the gradient
+       on q. A separate receipt builds and serves all four images, then verifies the complete
+       derivative through real HTTP/container boundaries at 1.1e-07
+       relative error.</p>
+    <figure><img src="assets/chain.png" alt="Differentiable chain diagram">
+      <figcaption><b>Fig. 2</b> · The forward render path in muted ink; the reverse pixels-to-source
+        gradient path through the camera VJP and the implicit-function-theorem adjoint.</figcaption></figure>
+  </section>
 
-  <h2 id="results">Mechanism check: the coupling is load-bearing</h2>
-  <p>Two recoveries share data, prior, optimizer, and budget. The second uses a
-     deliberately simplified frozen-viscosity forward model and its matching derivative;
-     the comparison therefore measures model mismatch, not a gradient-only intervention.</p>
-  <table>
-    <tr><th>metric</th><th style="text-align:right">coupled adjoint</th><th style="text-align:right">one-way</th></tr>
-    <tr><td>relative L<sub>2</sub> error of q&#770;</td><td class='num c'>0.137</td><td class='num o'>0.246</td></tr><tr><td>peak amplitude ratio (1 = ideal)</td><td class='num c'>1.115</td><td class='num o'>1.098</td></tr><tr><td>centroid shift [cells]</td><td class='num c'>0.02</td><td class='num o'>0.17</td></tr><tr><td>total recovered power ratio (1 = ideal)</td><td class='num c'>1.000</td><td class='num o'>1.017</td></tr><tr><td>final data loss [counts&sup2;]</td><td class='num c'>2.02</td><td class='num o'>3.34</td></tr><tr><td>adjoint GMRES matvecs</td><td class='num c'>2220</td><td class='num o'>0</td></tr>
-  </table>
-  <p class="note">Grid 32&times;16 plate, 96&times;64
-     sensor, &sigma;<sub>noise</sub> = 2.0 counts, seeds pinned; protocol committed
-     before the run (writeup/PROTOCOL.md). Declared criterion: coupled rel_l2 < 0.5 and centroid shift < 1.5 cells (PROTOCOL.md Amendment v2, declared before this run) —
-     met: True. Both arms reached the declared 250-iteration
-     limit, so the table reports budget-matched endpoints rather than convergence floors.</p>
-  <p><b>Factorial mechanism check.</b> Experiment E keeps the coupled forward
-     values but drops only the implicit feedback term in reverse. Source L<sub>2</sub>
-     becomes 0.241, versus
-     0.137 with the exact implicit adjoint and 0.246
-     with frozen forward physics. Data loss is
-     2.079, between exact-coupled
-     2.022 and frozen-forward 3.339.
-     This separates the effects: forward fidelity dominates pixel fit; exact
-     gradient fidelity improves the inferred source shape.</p>
-  <figure><img src="assets/recovery_convergence.png" alt="Convergence, coupled vs one-way"></figure>
-  <figure><img src="assets/recovery.gif" alt="Recovery animation" loading="lazy"><figcaption>Recorded run: frozen unseen scene 101 (Experiment D bank), calibrated arm &mdash; per-iteration snapshots from <code>figures/experiment_d/bank/bank_seed_101.npz</code>, not a demo.</figcaption></figure>
+  <section>
+    <div class="fig-eyebrow">Figure 3 · Pre-registered evidence</div>
+    <h2 id="generalization">Frozen-bank evidence, including the negative verdict</h2>
+    <p>Twelve fault scenes stayed sealed until the method, two-view training,
+       held-out third view, absolute pixel gate, and 4% emissivity mismatch were fixed.
+       Truth runs at 64&times;32 and inversion at 32&times;16. The calibrated arm is
+       operationally useful on <b>12/12</b> scenes and
+       passes every held-out residual check on <b>10/12</b>.
+       Median held-out RMS is 2.014 counts
+       at a 2-count noise floor; median centroid error is
+       0.088&nbsp;mm.</p>
+    <p>A fixed 4% emissivity underestimate increases absolute total-power error on
+       <b>12/12</b> paired scenes. The median increase is
+       <b>4.42 percentage points</b> (deterministic paired-bootstrap
+       95% interval 3.28&ndash;4.88). The preregistered stronger claim is
+       <b>not accepted</b>: only 1/12,
+       short of 6/12, were both independently plausible and at least five points harmful.
+       No scene or failed arm is excluded.</p>
+    <figure><img src="assets/experiment_d_generalization.png" alt="Paired unseen-scene source power error and held-out residuals">
+      <figcaption><b>Fig. 3</b> · Experiment D. Every point is a frozen scene; violet mismatch markers fail
+        at least one independent plausibility condition, even when RMS alone is below 2&sigma;.</figcaption></figure>
+  </section>
 
-  <h2 id="necessity">The renderer changes the diagnosis</h2>
-  <p>Experiment C removes the same-grid inverse crime: observations come from a
-     64&times;32 coupled solve and inversion runs at
-     32&times;16. With the calibrated renderer,
-     centroid error is 0.78 cells. A modest camera mismatch
-     (PSF 0.9 vs 1.2 px, gain +5%, offset +10 counts, ambient +3 K, and a small FOV error)
-     still fits within 2.14&times; the
-     calibrated RMS, but moves the inferred hotspot an additional 1.82
-     cells. Both fits remain far above the 2-count noise scale,
-     so this is calibration-sensitivity evidence, not a plausible-fit claim.</p>
-  <p class="note">The result is deliberately mixed: blackbody and no-vignetting models
-     are visibly rejectable, while removing PSF blur does not worsen localization and
-     improves coarse-grid source L2. The evidence supports calibration sensitivity, not
-     a claim that every renderer stage is indispensable.</p>
-  <figure><img src="assets/renderer_necessity.png" alt="Renderer calibration mismatch changes recovered hotspot"></figure>
+  <section>
+    <div class="fig-eyebrow">Figure 4 · Mechanism</div>
+    <h2 id="results">Mechanism check: the coupling is load-bearing</h2>
+    <p>Two recoveries share data, prior, optimizer, and budget. The second uses a
+       deliberately simplified frozen-viscosity forward model and its matching derivative;
+       the comparison therefore measures model mismatch, not a gradient-only intervention.</p>
+    <table>
+      <tr><th>metric</th><th style="text-align:right">coupled adjoint</th><th style="text-align:right">one-way</th></tr>
+      <tr><td>relative L<sub>2</sub> error of q&#770;</td><td class='num c'>0.971</td><td class='num o'>0.981</td></tr><tr><td>peak amplitude ratio (1 = ideal)</td><td class='num c'>0.030</td><td class='num o'>0.032</td></tr><tr><td>centroid shift [cells]</td><td class='num c'>6.85</td><td class='num o'>6.93</td></tr><tr><td>total recovered power ratio (1 = ideal)</td><td class='num c'>1.041</td><td class='num o'>1.364</td></tr><tr><td>final data loss [counts&sup2;]</td><td class='num c'>1.9e+03</td><td class='num o'>4.74e+04</td></tr><tr><td>adjoint GMRES matvecs</td><td class='num c'>1773</td><td class='num o'>0</td></tr>
+    </table>
+    <p class="note">Grid 32&times;16 plate, 96&times;64
+       sensor, &sigma;<sub>noise</sub> = 2.0 counts, seeds pinned; protocol committed
+       before the run (writeup/PROTOCOL.md). Declared criterion: coupled rel_l2 < 0.5 and centroid shift < 1.5 cells —
+       met: False. Both arms reached the declared 250-iteration
+       limit, so the table reports budget-matched endpoints rather than convergence floors.</p>
+    <p><b>Factorial mechanism check.</b> Experiment E keeps the coupled forward
+       values but drops only the implicit feedback term in reverse. Source L<sub>2</sub>
+       becomes 0.241, versus
+       0.971 with the exact implicit adjoint and 0.981
+       with frozen forward physics. Data loss is
+       2.079, between exact-coupled
+       1896.652 and frozen-forward 47385.729.
+       This separates the effects: forward fidelity dominates pixel fit; exact
+       gradient fidelity improves the inferred source shape.</p>
+    <figure><img src="assets/recovery_convergence.png" alt="Convergence, coupled vs one-way">
+      <figcaption><b>Fig. 4</b> · Budget-matched convergence of the coupled-adjoint and one-way arms.</figcaption></figure>
+    <figure><img src="assets/recovery.gif" alt="Recovery animation" loading="lazy"><figcaption><b>Recorded run</b> · frozen unseen scene 101 (Experiment D bank), calibrated arm &mdash; per-iteration snapshots from <code>figures/experiment_d/bank/bank_seed_101.npz</code>, not a demo.</figcaption></figure>
+  </section>
 
-  <h2 id="renderer">The renderer is physics, not a colormap</h2>
-  <p>Planck spectral radiance integrated over the 8&ndash;14&nbsp;&mu;m LWIR band by
-     Gauss&ndash;Legendre quadrature, grey-body emission plus reflected ambient
-     (Kirchhoff), a sensor-to-plate homography with differentiable bilinear sampling, a
-     Gaussian PSF whose width is itself a parameter, cos<sup>4</sup> vignetting, then gain
-     and offset to digital counts. Every stage moves the measured image; every stage is
-     differentiable. Experiment&nbsp;A tests single-frame calibration and exposes its
-     identifiability limit: gain is within 0.2% at zero noise,
-     but emissivity RMSE remains 0.101 and PSF/offset are not recovered.</p>
-  <figure><img src="assets/radiometry.png" alt="Planck curve and per-stage ablation strip"></figure>
+  <section>
+    <div class="fig-eyebrow">Figure 5 · Calibration sensitivity</div>
+    <h2 id="necessity">The renderer changes the diagnosis</h2>
+    <p>Experiment C removes the same-grid inverse crime: observations come from a
+       64&times;32 coupled solve and inversion runs at
+       32&times;16. With the calibrated renderer,
+       centroid error is 0.78 cells. A modest camera mismatch
+       (PSF 0.9 vs 1.2 px, gain +5%, offset +10 counts, ambient +3 K, and a small FOV error)
+       still fits within 2.14&times; the
+       calibrated RMS, but moves the inferred hotspot an additional 1.82
+       cells. Both fits remain far above the 2-count noise scale,
+       so this is calibration-sensitivity evidence, not a plausible-fit claim.</p>
+    <p class="note">The result is deliberately mixed: blackbody and no-vignetting models
+       are visibly rejectable, while removing PSF blur does not worsen localization and
+       improves coarse-grid source L2. The evidence supports calibration sensitivity, not
+       a claim that every renderer stage is indispensable.</p>
+    <figure><img src="assets/renderer_necessity.png" alt="Renderer calibration mismatch changes recovered hotspot">
+      <figcaption><b>Fig. 5</b> · Calibrated versus mismatched camera models on an independent discretization.</figcaption></figure>
+  </section>
+
+  <section>
+    <div class="fig-eyebrow">Figure 6 · The measurement model</div>
+    <h2 id="renderer">The renderer is physics, not a colormap</h2>
+    <p>Planck spectral radiance integrated over the 8&ndash;14&nbsp;&mu;m LWIR band by
+       Gauss&ndash;Legendre quadrature, grey-body emission plus reflected ambient
+       (Kirchhoff), a sensor-to-plate homography with differentiable bilinear sampling, a
+       Gaussian PSF whose width is itself a parameter, cos<sup>4</sup> vignetting, then gain
+       and offset to digital counts. Every stage moves the measured image; every stage is
+       differentiable. Experiment&nbsp;A tests single-frame calibration and exposes its
+       identifiability limit: gain is within 0.2% at zero noise,
+       but emissivity RMSE remains 0.101 and PSF/offset are not recovered.</p>
+    <figure><img src="assets/radiometry.png" alt="Planck curve and per-stage ablation strip">
+      <figcaption><b>Fig. 6</b> · Band-integrated Planck radiometry and the per-stage ablation strip.</figcaption></figure>
+  </section>
 
   <footer>
     Tesseract Hackathon 2026 &middot; Track 05 &middot;

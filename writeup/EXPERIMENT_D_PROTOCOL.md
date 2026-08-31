@@ -31,11 +31,11 @@ absolute fit gate, does it move the diagnosis by a practically material amount?
   over the resolved plate surface, not anti-aliasing of its silhouette.
 - Before fault-scene inversion, a known uniform 0.4·Q_SCALE-per-cell reference
   source and one +0.1·Q_SCALE perturbation at each of the 20 admissible chip
-  cells are solved on both grids. Their fine-minus-coarse temperature
-  discrepancies form a frozen local 20-column Jacobian from source to
-  block-averaged fine temperature. It is
-  applied before the camera for every arm and bank scene. The correction's
-  direct source VJP is added to the coarse model's implicit-adjoint gradient.
+  cells are solved on both grids. Their fine-minus-coarse rendered-pixel
+  discrepancies at all three fixed poses form a frozen local 20-column
+  Jacobian from source to observation. It is applied after the camera for every
+  arm and bank scene. The correction's direct source VJP is added to the
+  camera-to-coarse-model implicit-adjoint gradient.
   No random fault scene or bank observation contributes to this calibration.
 
 ## Fixed inverse method
@@ -112,7 +112,7 @@ After D1, the exact area-averaged source oracle was measured at 51.25 counts
 training RMS and 51.21 counts held-out RMS on development seed 0. This proves
 the original 4-count gate was outside the representable coarse-model family;
 optimizing harder could only bias the source to absorb discretization error.
-The known-load temperature correction above was therefore fixed before any
+The known-load multi-fidelity correction above was therefore fixed before any
 bank run. The failed oracle JSON/NPZ is retained in `figures/experiment_d/`.
 The absolute gate, held-out seeds, camera arms, and diagnostic thresholds are
 unchanged.
@@ -123,8 +123,8 @@ The D2 additive transfer reduced the oracle to 6.16 counts but the optimized
 development scene plateaued near 5.97 counts RMS. That shows the remaining grid
 error is response-dependent, not a constant temperature offset. The same two
 known calibration states are therefore used as an affine transfer, with its
-per-cell slope included in the VJP. This is the final forward-model amendment;
-it was fixed before any bank scene.
+per-cell slope included in the VJP. It was fixed before any bank scene and then
+superseded by the more expressive amendments below.
 
 ## Development amendment D4 — spatial discrepancy Jacobian
 
@@ -144,3 +144,12 @@ equilibrium is not a Jacobian. The final calibration is explicitly local around
 a 0.4·Q_SCALE-per-cell reference, close to the development scene's mean source
 coefficient, with +0.1·Q_SCALE perturbations. Runtime uses `(q−q_ref)/delta`;
 the VJP uses the same delta. This correction was fixed before any bank scene.
+
+## Development amendment D6 — calibrate the measured observation
+
+The local temperature-space tangent produced a 6.23-count oracle. The remaining
+error comes from rendering fine and coarse cell lattices, so the final tangent
+is measured in pixel space at the two training poses and held-out pose. This is
+the quantity used by the loss and the absolute gate. Its direct pixel-to-source
+VJP is included exactly. Physics calibration loads, reference, delta, bank,
+thresholds, and camera arms are unchanged.

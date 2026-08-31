@@ -138,18 +138,19 @@ def physical_metrics(q_rec: np.ndarray, q_true: np.ndarray, plate: ColdPlate) ->
 
 class MultiViewForward:
     def __init__(self, system, cameras, masks, gamma, eps, psf_sigma, gain,
-                 offset, t_init, discrepancy_offset=None,
-                 discrepancy_basis=None, discrepancy_support=None,
+                 offset, t_init, pixel_offset=None, pixel_basis=None,
+                 discrepancy_support=None,
                  discrepancy_reference_q=None, discrepancy_delta_q=Q_SCALE):
         self.system, self.cameras = system, cameras
         self.masks = masks
         self.gamma, self.eps = gamma, eps
         self.psf_sigma, self.gain, self.offset = psf_sigma, gain, offset
         self.t_init, self._T_warm = t_init, None
-        self.discrepancy_offset = (np.zeros_like(gamma) if discrepancy_offset is None
-                                   else np.asarray(discrepancy_offset, float))
-        self.discrepancy_basis = (np.zeros((0,) + gamma.shape) if discrepancy_basis is None
-                                  else np.asarray(discrepancy_basis, float))
+        image_shape = (len(cameras),) + masks[0].shape
+        self.pixel_offset = (np.zeros(image_shape) if pixel_offset is None
+                             else np.asarray(pixel_offset, float))
+        self.pixel_basis = (np.zeros((len(cameras), 0) + masks[0].shape)
+                            if pixel_basis is None else np.asarray(pixel_basis, float))
         self.discrepancy_support = (np.empty(0, dtype=int) if discrepancy_support is None
                                     else np.asarray(discrepancy_support, int))
         self.discrepancy_reference_q = (
@@ -159,13 +160,16 @@ class MultiViewForward:
         self._q_current = np.zeros_like(gamma)
 
     def observed_temperature(self, st):
+        return st.T
+
+    def pixel_correction(self, view_index: int) -> np.ndarray:
         coeff = ((self._q_current - self.discrepancy_reference_q).ravel()[
                  self.discrepancy_support] / self.discrepancy_delta_q)
-        correction = self.discrepancy_offset
+        correction = self.pixel_offset[view_index]
         if coeff.size:
-            correction = correction + np.tensordot(coeff, self.discrepancy_basis,
-                                                    axes=(0, 0))
-        return st.T + correction
+            correction = correction + np.tensordot(
+                coeff, self.pixel_basis[view_index], axes=(0, 0))
+        return correction
 
     def solve(self, q):
         self._q_current = np.asarray(q, float).copy()
@@ -180,14 +184,16 @@ class MultiViewForward:
     def render(self, st):
         observed_T = self.observed_temperature(st)
         return [cam.apply(observed_T, self.eps, self.psf_sigma, self.gain, self.offset)
-                for cam in self.cameras]
+                + self.pixel_correction(i) for i, cam in enumerate(self.cameras)]
 
     def loss_and_grad_q(self, q, measurements):
         st = self.solve(q)
         images = self.render(st)
         dJ_dT = np.zeros_like(st.T)
         loss = 0.0
-        for cam, mask, image, measured in zip(self.cameras, self.masks, images, measurements):
+        direct = np.zeros(self.discrepancy_support.size)
+        for view_index, (cam, mask, image, measured) in enumerate(
+                zip(self.cameras, self.masks, images, measurements)):
             residual = image - measured
             loss += 0.5 * float(np.mean(residual[mask]**2)) / len(images)
             cot = np.zeros_like(residual)
@@ -196,13 +202,14 @@ class MultiViewForward:
             camera_bar = cam.vjp(observed_T, self.eps, self.psf_sigma, self.gain,
                                  self.offset, cot, wrt=("T",))["T"]
             dJ_dT += camera_bar
+            if self.discrepancy_support.size:
+                direct += np.tensordot(self.pixel_basis[view_index], cot,
+                                       axes=((1, 2), (0, 1))) / self.discrepancy_delta_q
         grad, matvecs, ok = gradient_wrt_q(self.system, self.gamma, st, dJ_dT)
         if not ok:
             raise RuntimeError("implicit adjoint GMRES did not converge")
         if self.discrepancy_support.size:
             grad = np.array(grad, copy=True)
-            direct = np.tensordot(self.discrepancy_basis, dJ_dT,
-                                  axes=((1, 2), (0, 1))) / self.discrepancy_delta_q
             grad.ravel()[self.discrepancy_support] += direct
         return loss, grad, {"state": st, "images": images, "matvecs": matvecs}
 
@@ -264,6 +271,14 @@ def camera_spec(arm: str) -> dict:
                 "t_ambient": 296.0, "half_fov_tan": 0.46,
                 "tilt_delta": 0.015}
     raise ValueError(f"unknown arm {arm}")
+
+
+def evaluate_pixel_correction(q: np.ndarray, reference_q: np.ndarray,
+                              support: np.ndarray, delta_q: float,
+                              offset: np.ndarray, basis: np.ndarray) -> np.ndarray:
+    """Evaluate one pose's calibrated source-to-pixel discrepancy."""
+    coeff = ((np.asarray(q) - reference_q).ravel()[support] / delta_q)
+    return np.asarray(offset) + np.tensordot(coeff, basis, axes=(0, 0))
 
 
 def main() -> None:
@@ -334,13 +349,13 @@ def main() -> None:
         raise FileNotFoundError(
             f"missing {calibration_path}; run scripts/calibrate_multifidelity.py first")
     calibration = np.load(calibration_path)
-    discrepancy_offset = calibration["offset"]
-    discrepancy_basis = calibration["basis"]
+    pixel_offset = calibration["pixel_offset"]
+    pixel_basis = calibration["pixel_basis"]
     discrepancy_support = calibration["support_flat"].astype(int)
     discrepancy_reference_q = calibration["reference_q"]
     discrepancy_delta_q = float(calibration["delta_q"])
-    if (discrepancy_offset.shape != plate.shape
-            or discrepancy_basis.shape != (support.sum(),) + plate.shape
+    if (pixel_offset.shape != (3, sensor["n_u"], sensor["n_v"])
+            or pixel_basis.shape != (3, support.sum(), sensor["n_u"], sensor["n_v"])
             or not np.array_equal(discrepancy_support, np.flatnonzero(support.ravel()))):
         raise ValueError("multi-fidelity calibration does not match declared grid/support")
 
@@ -359,14 +374,16 @@ def main() -> None:
         oracle_fwd = MultiViewForward(oracle_system, oracle_cams, train_masks,
                                       gamma, eps, SIGMA_TRUE, GAIN_TRUE,
                                       OFFSET_TRUE, plate.t_in,
-                                      discrepancy_offset, discrepancy_basis,
+                                      pixel_offset[:2], pixel_basis[:2],
                                       discrepancy_support, discrepancy_reference_q,
                                       discrepancy_delta_q)
         oracle_state = oracle_fwd.solve(q_target)
         oracle_train = oracle_fwd.render(oracle_state)
         oracle_holdout = oracle_hold_cam.apply(
             oracle_fwd.observed_temperature(oracle_state), eps, SIGMA_TRUE,
-            GAIN_TRUE, OFFSET_TRUE)
+            GAIN_TRUE, OFFSET_TRUE) + evaluate_pixel_correction(
+                q_target, discrepancy_reference_q, discrepancy_support,
+                discrepancy_delta_q, pixel_offset[2], pixel_basis[2])
     oracle_train_values = np.concatenate([(r - y)[m] for r, y, m in
                                           zip(oracle_train, measured_train, train_masks)])
     oracle_hold_diag = residual_diagnostics(oracle_holdout - measured_holdout,
@@ -379,7 +396,7 @@ def main() -> None:
 
     results, arrays = {}, {"q_truth": q_truth, "q_target": q_target,
                            "gamma": gamma, "support": support,
-                           "discrepancy_offset": discrepancy_offset,
+                           "pixel_discrepancy_offset": pixel_offset,
                            "discrepancy_reference_q": discrepancy_reference_q,
                            "discrepancy_delta_q": discrepancy_delta_q,
                            "train_masks": np.asarray(train_masks),
@@ -401,7 +418,7 @@ def main() -> None:
                     "half_fov_tan": spec["half_fov_tan"]}))
             fwd = MultiViewForward(system, cams, train_masks, gamma, eps, spec["psf_sigma"],
                                    spec["gain"], spec["offset"], plate.t_in,
-                                   discrepancy_offset, discrepancy_basis,
+                                   pixel_offset[:2], pixel_basis[:2],
                                    discrepancy_support, discrepancy_reference_q,
                                    discrepancy_delta_q)
             rec = recover(fwd, measured_train, support, args.maxiter)
@@ -409,7 +426,9 @@ def main() -> None:
             rendered_train = fwd.render(st)
             rendered_holdout = hold_cam.apply(fwd.observed_temperature(st), eps,
                                                spec["psf_sigma"],
-                                               spec["gain"], spec["offset"])
+                                               spec["gain"], spec["offset"]) + evaluate_pixel_correction(
+                rec["q_best"], discrepancy_reference_q, discrepancy_support,
+                discrepancy_delta_q, pixel_offset[2], pixel_basis[2])
         train_values = np.concatenate([(r - y)[m]
                                        for r, y, m in zip(rendered_train, measured_train,
                                                           train_masks)])

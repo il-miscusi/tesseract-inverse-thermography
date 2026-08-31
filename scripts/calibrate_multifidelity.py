@@ -17,9 +17,13 @@ sys.path.insert(0, str(ROOT))
 sys.path.insert(0, str(ROOT / "scripts"))
 
 from coupler import ColdPlate, DensityFilter
+from coupler.camera import camera_session
 from coupler.session import coupled_session
-from experiment_b_v2 import Q_SCALE
-from experiment_d_generalization import PROBLEM_SEED, block_average, chip_mask
+from experiment_a import true_emissivity
+from experiment_b_v2 import GAIN_TRUE, OFFSET_TRUE, Q_SCALE, SIGMA_TRUE
+from experiment_d_generalization import (HOLDOUT_TILT, PROBLEM_SEED,
+                                         TRAIN_TILTS, block_average, chip_mask)
+from _render import default_homography
 
 REFERENCE_FRAC = 0.4
 DELTA_FRAC = 0.1
@@ -41,10 +45,17 @@ def main() -> None:
     gamma_truth = np.repeat(np.repeat(gamma, scale, axis=0), scale, axis=1)
     support = chip_mask(plate.shape, plate)
     support_flat = np.flatnonzero(support.ravel())
+    eps = true_emissivity(plate.shape)
+    eps_truth = true_emissivity(truth_plate.shape)
+    tilts = TRAIN_TILTS + (HOLDOUT_TILT,)
+    sensor = {"n_u": 96, "n_v": 64, "t_ambient": 295.0,
+              "half_fov_tan": 0.45}
 
     with ExitStack() as stack:
         coarse = stack.enter_context(coupled_session(plate))
         fine = stack.enter_context(coupled_session(truth_plate))
+        cameras = [stack.enter_context(camera_session(
+            {**sensor, "homography": default_homography(t)})) for t in tilts]
         q_ref_coarse = REFERENCE_FRAC * Q_SCALE * support
         q_ref_fine = np.repeat(np.repeat(q_ref_coarse, scale, axis=0), scale, axis=1)
         coarse.heat.params["q_source"] = q_ref_coarse
@@ -54,7 +65,12 @@ def main() -> None:
         if not st0c.converged or not st0f.converged:
             raise RuntimeError("reference calibration solve did not converge")
         offset = block_average(st0f.T, scale) - st0c.T
+        pixel_offset = np.asarray([
+            cam.apply(st0f.T, eps_truth, SIGMA_TRUE, GAIN_TRUE, OFFSET_TRUE)
+            - cam.apply(st0c.T, eps, SIGMA_TRUE, GAIN_TRUE, OFFSET_TRUE)
+            for cam in cameras])
         basis = []
+        pixel_basis = []
         for k, flat in enumerate(support_flat):
             i, j = np.unravel_index(int(flat), plate.shape)
             qc = q_ref_coarse.copy()
@@ -71,12 +87,19 @@ def main() -> None:
                 raise RuntimeError(f"basis calibration solve {k} did not converge")
             discrepancy = block_average(stf.T, scale) - stc.T
             basis.append(discrepancy - offset)
+            pixel_discrepancy = np.asarray([
+                cam.apply(stf.T, eps_truth, SIGMA_TRUE, GAIN_TRUE, OFFSET_TRUE)
+                - cam.apply(stc.T, eps, SIGMA_TRUE, GAIN_TRUE, OFFSET_TRUE)
+                for cam in cameras])
+            pixel_basis.append(pixel_discrepancy - pixel_offset)
             print(f"basis {k + 1:2d}/{support_flat.size} cell=({i},{j}) "
                   f"max|dT|={np.max(np.abs(basis[-1])):.4f} K", flush=True)
 
     out = ROOT / args.out
     out.parent.mkdir(parents=True, exist_ok=True)
     np.savez(out, offset=offset, basis=np.asarray(basis),
+             pixel_offset=pixel_offset,
+             pixel_basis=np.moveaxis(np.asarray(pixel_basis), 0, 1),
              support_flat=support_flat, reference_q=q_ref_coarse,
              delta_q=DELTA_FRAC * Q_SCALE, gamma=gamma)
     payload = {"protocol": "writeup/EXPERIMENT_D_PROTOCOL.md",
@@ -85,8 +108,11 @@ def main() -> None:
                "reference_frac": REFERENCE_FRAC, "delta_frac": DELTA_FRAC,
                "support_cells": int(support_flat.size),
                "basis_shape": list(np.asarray(basis).shape),
+               "pixel_basis_shape": list(np.moveaxis(np.asarray(pixel_basis), 0, 1).shape),
+               "camera_tilts": list(tilts),
                "max_abs_offset_K": float(np.max(np.abs(offset))),
                "max_abs_basis_K": float(np.max(np.abs(basis))),
+               "max_abs_pixel_basis_counts": float(np.max(np.abs(pixel_basis))),
                "seconds": time.time() - t0}
     out.with_suffix(".json").write_text(json.dumps(payload, indent=2) + "\n")
     print(f"wrote {out} ({payload['seconds']:.0f}s)", flush=True)

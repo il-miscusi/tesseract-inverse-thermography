@@ -1,0 +1,70 @@
+name: containers
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "tesseracts/**"
+      - "coupler/**"
+      - "scripts/verify_e2e_gradient.py"
+      - ".github/workflows/containers.yml"
+      - "requirements.txt"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  ghcr-served-e2e:
+    runs-on: ubuntu-24.04
+    env:
+      REG: ghcr.io/${{ github.repository }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+      - run: pip install -r requirements.txt
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build the four component images
+        run: make build-images
+      - name: Push images and record immutable digests
+        run: |
+          echo '{}' > ghcr_digests.json
+          for c in darcy-flow heat-transport viscosity-closure thermal-camera; do
+            docker tag "$c:latest" "$REG/$c:${{ github.sha }}"
+            docker tag "$c:latest" "$REG/$c:latest"
+            docker push "$REG/$c:${{ github.sha }}"
+            docker push "$REG/$c:latest"
+            digest=$(docker inspect --format='{{index .RepoDigests 0}}' "$REG/$c:${{ github.sha }}")
+            jq --arg c "$c" --arg d "$digest" '. + {($c): $d}' ghcr_digests.json > tmp.json
+            mv tmp.json ghcr_digests.json
+          done
+          echo '## GHCR digests' >> "$GITHUB_STEP_SUMMARY"
+          jq . ghcr_digests.json | tee -a "$GITHUB_STEP_SUMMARY"
+      - name: Re-pull by digest and retag as the names the coupler serves
+        run: |
+          for c in darcy-flow heat-transport viscosity-closure thermal-camera; do
+            digest=$(jq -r --arg c "$c" '.[$c]' ghcr_digests.json)
+            docker rmi -f "$c:latest"
+            docker pull "$digest"
+            docker tag "$digest" "$c:latest"
+          done
+      - name: End-to-end FD gate against served, pulled-by-digest containers
+        run: |
+          COUPLER_INPROCESS= DARCY_SOLVER_BIN= OMP_NUM_THREADS=1 \
+          python3 scripts/verify_e2e_gradient.py --nx 8 --ny 4 --n-u 24 --n-v 16 \
+            --out container_e2e_gradient_check.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ghcr-digests-and-gate
+          path: |
+            ghcr_digests.json
+            container_e2e_gradient_check.json

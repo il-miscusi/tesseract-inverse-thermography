@@ -1,0 +1,65 @@
+{
+  "protocol": "writeup/EXPERIMENT_D_PROTOCOL.md",
+  "stage": "dev",
+  "seed": 0,
+  "inverse_grid": [
+    32,
+    16
+  ],
+  "truth_grid": [
+    64,
+    32
+  ],
+  "train_tilts": [
+    0.22,
+    -0.18
+  ],
+  "holdout_tilt": 0.05,
+  "noise_counts": 2.0,
+  "problem_seed": 73,
+  "source_blobs": [
+    {
+      "cx": 0.44014454557860627,
+      "cy": 0.01868761715425752,
+      "wx": 0.018446246159270284,
+      "wy": 0.030705215501606268,
+      "amplitude": 1.4714800195499496
+    },
+    {
+      "cx": 0.5277253016994667,
+      "cy": 0.08065469048855985,
+      "wx": 0.03267787476956641,
+      "wy": 0.03350666574711867,
+      "amplitude": 1.384268198709379
+    },
+    {
+      "cx": 0.3707120100442385,
+      "cy": 0.09216638489288123,
+      "wx": 0.018906810533247536,
+      "wy": 0.028782075267888715,
+      "amplitude": 0.8080900585423031
+    },
+    {
+      "cx": 0.5944265198109705,
+      "cy": 0.06373150982241825,
+      "wx": 0.026092221044509388,
+      "wy": 0.021721806087546147,
+      "amplitude": 0.6754877040309167
+    }
+  ],
+  "support_cells": 20,
+  "coarse_source_oracle": {
+    "train_rms_counts": 51.247336018538995,
+    "holdout_residual": {
+      "rms_counts": 51.205979626579676,
+      "mean_counts": 50.707006069435934,
+      "lag1_horizontal": 0.838479919787314,
+      "lag1_vertical": 0.9102070739193404,
+      "pixels": 4640
+    },
+    "holdout_rms_noise_sigmas": 25.602989813289838
+  },
+  "results": {},
+  "materially_harmful_plausible_mismatch": false,
+  "seconds": 27.430315017700195
+}

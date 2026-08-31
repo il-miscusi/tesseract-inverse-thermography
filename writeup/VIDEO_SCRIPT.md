@@ -121,3 +121,47 @@ the landing page hero with the repo URL on screen.
 - Record at 1920×1080; the dark theme is the grade, don't color-correct.
 - `make animation` regenerates `recovery.mp4` before capture.
 - Keep total ≤ 5:00 hard; Shot 4 is the flex — trim the hold there first.
+
+---
+
+# 90-second cut — record this one if only one gets recorded
+
+Same visuals inventory, three beats, ~215 words at 140 wpm ≈ 1:30.
+
+## Beat 1 — Composition depth (0:00–0:30)
+
+**Visuals:** hero.png panel 3 (3 s hold, title fade), then chain.png pan.
+
+**VO:**
+> This is a thermal image of a chip plate — Planck radiance through a lens
+> and a sensor, not a temperature map. Behind it, two hidden hot spots.
+> We recover them with one gradient, through physics no single autodiff
+> framework can trace: a PyTorch viscosity closure, a compiled Fortran flow
+> solver with a hand-derived adjoint, JAX heat transport in a two-way fixed
+> point, and a physically based LWIR camera on top. Four Tesseracts, three
+> native derivative regimes, one implicit adjoint — verified against finite
+> differences to one part in ten million, through four served containers.
+
+## Beat 2 — Generalization under audit (0:30–1:00)
+
+**Visuals:** recovery.gif (real run, scene 101), then the Experiment D panel.
+
+**VO:**
+> Then we audited it. Twelve frozen unseen scenes, fine-grid truth,
+> coarse-grid inversion, an independently held-out camera pose. Useful
+> diagnosis on all twelve; held-out residuals at the sensor noise floor on
+> ten. Every scene, every gate, in the shipped JSON — nothing filtered
+> after the run.
+
+## Beat 3 — A result that can say no (1:00–1:30)
+
+**Visuals:** paired power-error panel, reveal the verdict line, close on
+repo URL.
+
+**VO:**
+> A four-percent emissivity error slips past every residual check and biases
+> every power estimate — all twelve scenes, confidence interval three point
+> three to four point nine points. And when our stronger preregistered claim
+> missed its own threshold, we shipped the rejection. A differentiable
+> system should make claims testable — including the ones the evidence
+> turns down. Code, protocol, raw bank: one make target regenerates it all.

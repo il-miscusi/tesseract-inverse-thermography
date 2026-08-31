@@ -1,0 +1,22 @@
+{
+  "protocol": "writeup/EXPERIMENT_D_PROTOCOL.md",
+  "problem_seed": 73,
+  "coarse_grid": [
+    32,
+    16
+  ],
+  "truth_grid": [
+    64,
+    32
+  ],
+  "q_scale": 150000000.0,
+  "support_cells": 20,
+  "basis_shape": [
+    20,
+    32,
+    16
+  ],
+  "max_abs_offset_K": 6.547509201482171e-09,
+  "max_abs_basis_K": 2.427598490020614,
+  "seconds": 96.40635704994202
+}

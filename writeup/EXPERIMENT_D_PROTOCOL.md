@@ -29,10 +29,11 @@ absolute fit gate, does it move the diagnosis by a practically material amount?
   excluded because a cell-centred 32×16 surface and a 64×32 surface represent
   that sub-pixel geometric edge differently; the claim concerns thermography
   over the resolved plate surface, not anti-aliasing of its silhouette.
-- Before fault-scene inversion, a zero-load state and one known Q_SCALE unit
-  load at each of the 20 admissible coarse chip cells are solved on both grids.
-  Their fine-minus-coarse temperature discrepancies form a frozen 20-column
-  linear correction from source to block-averaged fine temperature. It is
+- Before fault-scene inversion, a known uniform 0.4·Q_SCALE-per-cell reference
+  source and one +0.1·Q_SCALE perturbation at each of the 20 admissible chip
+  cells are solved on both grids. Their fine-minus-coarse temperature
+  discrepancies form a frozen local 20-column Jacobian from source to
+  block-averaged fine temperature. It is
   applied before the camera for every arm and bank scene. The correction's
   direct source VJP is added to the coarse model's implicit-adjoint gradient.
   No random fault scene or bank observation contributes to this calibration.
@@ -134,3 +135,12 @@ temperature-discrepancy response per admissible source cell. This 20-column
 linear map is small, independently generated, reusable across all scenes, and
 fully differentiated. The bank remains untouched and the 4-count gate remains
 unchanged.
+
+## Development amendment D5 — local tangent calibration
+
+The first D4 implementation used unit-load secants from zero and produced a
+277-count oracle: superposing large secants through the nonlinear viscosity-flow
+equilibrium is not a Jacobian. The final calibration is explicitly local around
+a 0.4·Q_SCALE-per-cell reference, close to the development scene's mean source
+coefficient, with +0.1·Q_SCALE perturbations. Runtime uses `(q−q_ref)/delta`;
+the VJP uses the same delta. This correction was fixed before any bank scene.

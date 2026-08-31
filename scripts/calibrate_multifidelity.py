@@ -21,6 +21,9 @@ from coupler.session import coupled_session
 from experiment_b_v2 import Q_SCALE
 from experiment_d_generalization import PROBLEM_SEED, block_average, chip_mask
 
+REFERENCE_FRAC = 0.4
+DELTA_FRAC = 0.1
+
 
 def main() -> None:
     parser = argparse.ArgumentParser()
@@ -42,20 +45,22 @@ def main() -> None:
     with ExitStack() as stack:
         coarse = stack.enter_context(coupled_session(plate))
         fine = stack.enter_context(coupled_session(truth_plate))
-        coarse.heat.params["q_source"] = np.zeros(plate.shape)
-        fine.heat.params["q_source"] = np.zeros(truth_plate.shape)
+        q_ref_coarse = REFERENCE_FRAC * Q_SCALE * support
+        q_ref_fine = np.repeat(np.repeat(q_ref_coarse, scale, axis=0), scale, axis=1)
+        coarse.heat.params["q_source"] = q_ref_coarse
+        fine.heat.params["q_source"] = q_ref_fine
         st0c = coarse.solve(gamma, t_init=plate.t_in, tol=1e-9, maxiter=180)
         st0f = fine.solve(gamma_truth, t_init=truth_plate.t_in, tol=1e-9, maxiter=180)
         if not st0c.converged or not st0f.converged:
-            raise RuntimeError("baseline calibration solve did not converge")
+            raise RuntimeError("reference calibration solve did not converge")
         offset = block_average(st0f.T, scale) - st0c.T
         basis = []
         for k, flat in enumerate(support_flat):
             i, j = np.unravel_index(int(flat), plate.shape)
-            qc = np.zeros(plate.shape)
-            qf = np.zeros(truth_plate.shape)
-            qc[i, j] = Q_SCALE
-            qf[i * scale:(i + 1) * scale, j * scale:(j + 1) * scale] = Q_SCALE
+            qc = q_ref_coarse.copy()
+            qf = q_ref_fine.copy()
+            qc[i, j] += DELTA_FRAC * Q_SCALE
+            qf[i * scale:(i + 1) * scale, j * scale:(j + 1) * scale] += DELTA_FRAC * Q_SCALE
             coarse.heat.params["q_source"] = qc
             fine.heat.params["q_source"] = qf
             stc = coarse.solve(gamma, T0=st0c.T, t_init=plate.t_in,
@@ -72,10 +77,12 @@ def main() -> None:
     out = ROOT / args.out
     out.parent.mkdir(parents=True, exist_ok=True)
     np.savez(out, offset=offset, basis=np.asarray(basis),
-             support_flat=support_flat, gamma=gamma)
+             support_flat=support_flat, reference_q=q_ref_coarse,
+             delta_q=DELTA_FRAC * Q_SCALE, gamma=gamma)
     payload = {"protocol": "writeup/EXPERIMENT_D_PROTOCOL.md",
                "problem_seed": PROBLEM_SEED, "coarse_grid": list(plate.shape),
                "truth_grid": list(truth_plate.shape), "q_scale": Q_SCALE,
+               "reference_frac": REFERENCE_FRAC, "delta_frac": DELTA_FRAC,
                "support_cells": int(support_flat.size),
                "basis_shape": list(np.asarray(basis).shape),
                "max_abs_offset_K": float(np.max(np.abs(offset))),

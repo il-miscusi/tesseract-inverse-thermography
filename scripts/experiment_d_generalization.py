@@ -139,7 +139,8 @@ def physical_metrics(q_rec: np.ndarray, q_true: np.ndarray, plate: ColdPlate) ->
 class MultiViewForward:
     def __init__(self, system, cameras, masks, gamma, eps, psf_sigma, gain,
                  offset, t_init, discrepancy_offset=None,
-                 discrepancy_basis=None, discrepancy_support=None):
+                 discrepancy_basis=None, discrepancy_support=None,
+                 discrepancy_reference_q=None, discrepancy_delta_q=Q_SCALE):
         self.system, self.cameras = system, cameras
         self.masks = masks
         self.gamma, self.eps = gamma, eps
@@ -151,10 +152,15 @@ class MultiViewForward:
                                   else np.asarray(discrepancy_basis, float))
         self.discrepancy_support = (np.empty(0, dtype=int) if discrepancy_support is None
                                     else np.asarray(discrepancy_support, int))
+        self.discrepancy_reference_q = (
+            np.zeros_like(gamma) if discrepancy_reference_q is None
+            else np.asarray(discrepancy_reference_q, float))
+        self.discrepancy_delta_q = float(discrepancy_delta_q)
         self._q_current = np.zeros_like(gamma)
 
     def observed_temperature(self, st):
-        coeff = self._q_current.ravel()[self.discrepancy_support] / Q_SCALE
+        coeff = ((self._q_current - self.discrepancy_reference_q).ravel()[
+                 self.discrepancy_support] / self.discrepancy_delta_q)
         correction = self.discrepancy_offset
         if coeff.size:
             correction = correction + np.tensordot(coeff, self.discrepancy_basis,
@@ -196,7 +202,7 @@ class MultiViewForward:
         if self.discrepancy_support.size:
             grad = np.array(grad, copy=True)
             direct = np.tensordot(self.discrepancy_basis, dJ_dT,
-                                  axes=((1, 2), (0, 1))) / Q_SCALE
+                                  axes=((1, 2), (0, 1))) / self.discrepancy_delta_q
             grad.ravel()[self.discrepancy_support] += direct
         return loss, grad, {"state": st, "images": images, "matvecs": matvecs}
 
@@ -331,6 +337,8 @@ def main() -> None:
     discrepancy_offset = calibration["offset"]
     discrepancy_basis = calibration["basis"]
     discrepancy_support = calibration["support_flat"].astype(int)
+    discrepancy_reference_q = calibration["reference_q"]
+    discrepancy_delta_q = float(calibration["delta_q"])
     if (discrepancy_offset.shape != plate.shape
             or discrepancy_basis.shape != (support.sum(),) + plate.shape
             or not np.array_equal(discrepancy_support, np.flatnonzero(support.ravel()))):
@@ -352,7 +360,8 @@ def main() -> None:
                                       gamma, eps, SIGMA_TRUE, GAIN_TRUE,
                                       OFFSET_TRUE, plate.t_in,
                                       discrepancy_offset, discrepancy_basis,
-                                      discrepancy_support)
+                                      discrepancy_support, discrepancy_reference_q,
+                                      discrepancy_delta_q)
         oracle_state = oracle_fwd.solve(q_target)
         oracle_train = oracle_fwd.render(oracle_state)
         oracle_holdout = oracle_hold_cam.apply(
@@ -371,6 +380,8 @@ def main() -> None:
     results, arrays = {}, {"q_truth": q_truth, "q_target": q_target,
                            "gamma": gamma, "support": support,
                            "discrepancy_offset": discrepancy_offset,
+                           "discrepancy_reference_q": discrepancy_reference_q,
+                           "discrepancy_delta_q": discrepancy_delta_q,
                            "train_masks": np.asarray(train_masks),
                            "holdout_mask": holdout_mask,
                            "measured_holdout": measured_holdout,
@@ -391,7 +402,8 @@ def main() -> None:
             fwd = MultiViewForward(system, cams, train_masks, gamma, eps, spec["psf_sigma"],
                                    spec["gain"], spec["offset"], plate.t_in,
                                    discrepancy_offset, discrepancy_basis,
-                                   discrepancy_support)
+                                   discrepancy_support, discrepancy_reference_q,
+                                   discrepancy_delta_q)
             rec = recover(fwd, measured_train, support, args.maxiter)
             st = fwd.solve(rec["q_best"])
             rendered_train = fwd.render(st)

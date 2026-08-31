@@ -10,13 +10,15 @@
     32
   ],
   "q_scale": 150000000.0,
+  "reference_frac": 0.4,
+  "delta_frac": 0.1,
   "support_cells": 20,
   "basis_shape": [
     20,
     32,
     16
   ],
-  "max_abs_offset_K": 6.547509201482171e-09,
-  "max_abs_basis_K": 2.427598490020614,
-  "seconds": 96.40635704994202
+  "max_abs_offset_K": 3.047717622468099,
+  "max_abs_basis_K": 0.028268913346721547,
+  "seconds": 101.67653179168701
 }

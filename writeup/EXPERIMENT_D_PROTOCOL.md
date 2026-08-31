@@ -29,6 +29,13 @@ absolute fit gate, does it move the diagnosis by a practically material amount?
   excluded because a cell-centred 32×16 surface and a 64×32 surface represent
   that sub-pixel geometric edge differently; the claim concerns thermography
   over the resolved plate surface, not anti-aliasing of its silhouette.
+- Before fault-scene inversion, one separate known uniform-heating calibration
+  load (0.5·Q_SCALE over the chip footprint) is solved on both grids. The
+  block-averaged fine temperature minus the coarse temperature is frozen as a
+  source-independent multi-fidelity temperature correction. It is added before
+  the camera for every arm and bank scene; its derivative is the identity, so
+  the pixels-to-source adjoint is unchanged. No fault-scene or bank observation
+  contributes to this correction.
 
 ## Fixed inverse method
 
@@ -97,3 +104,14 @@ showed the dominant coherent error on the projected plate boundary. The run was
 stopped without producing a result artifact. The interior ROI above was then
 fixed before any bank seed was run. No optimizer, source, or bank setting was
 changed. All subsequent development and bank results must use and store the ROI.
+
+## Development amendment D2 — calibrated multi-fidelity correction
+
+After D1, the exact area-averaged source oracle was measured at 51.25 counts
+training RMS and 51.21 counts held-out RMS on development seed 0. This proves
+the original 4-count gate was outside the representable coarse-model family;
+optimizing harder could only bias the source to absorb discretization error.
+The known-load temperature correction above was therefore fixed before any
+bank run. The failed oracle JSON/NPZ is retained in `figures/experiment_d/`.
+The absolute gate, held-out seeds, camera arms, and diagnostic thresholds are
+unchanged.

@@ -266,12 +266,12 @@ def camera_spec(arm: str) -> dict:
         return {"psf_sigma": SIGMA_TRUE, "gain": GAIN_TRUE,
                 "offset": OFFSET_TRUE, "t_ambient": 295.0,
                 "half_fov_tan": 0.45, "tilt_delta": 0.0,
-                "pose_dx_fraction": 0.0}
+                "pose_dx_fraction": 0.0, "emissivity_scale": 1.0}
     if arm == "mismatch":
         return {"psf_sigma": SIGMA_TRUE, "gain": GAIN_TRUE,
                 "offset": OFFSET_TRUE, "t_ambient": 295.0,
                 "half_fov_tan": 0.45, "tilt_delta": 0.0,
-                "pose_dx_fraction": 0.005}
+                "pose_dx_fraction": 0.0, "emissivity_scale": 0.95}
     raise ValueError(f"unknown arm {arm}")
 
 
@@ -414,6 +414,7 @@ def main() -> None:
                            "clean_holdout": clean_holdout}
     for arm in (() if args.oracle_only else args.arms):
         spec = camera_spec(arm)
+        eps_arm = np.clip(eps * spec["emissivity_scale"], 0.01, 1.0)
         print(f"arm {arm}", flush=True)
         with ExitStack() as stack:
             system = stack.enter_context(coupled_session(plate))
@@ -425,7 +426,7 @@ def main() -> None:
                     "homography": assumed_homography(HOLDOUT_TILT, spec),
                     "t_ambient": spec["t_ambient"],
                     "half_fov_tan": spec["half_fov_tan"]}))
-            fwd = MultiViewForward(system, cams, train_masks, gamma, eps, spec["psf_sigma"],
+            fwd = MultiViewForward(system, cams, train_masks, gamma, eps_arm, spec["psf_sigma"],
                                    spec["gain"], spec["offset"], plate.t_in,
                                    pixel_offset[:2], pixel_basis[:2],
                                    discrepancy_support, discrepancy_reference_q,
@@ -433,7 +434,7 @@ def main() -> None:
             rec = recover(fwd, measured_train, support, args.maxiter)
             st = fwd.solve(rec["q_best"])
             rendered_train = fwd.render(st)
-            rendered_holdout = hold_cam.apply(fwd.observed_temperature(st), eps,
+            rendered_holdout = hold_cam.apply(fwd.observed_temperature(st), eps_arm,
                                                spec["psf_sigma"],
                                                spec["gain"], spec["offset"]) + evaluate_pixel_correction(
                 rec["q_best"], discrepancy_reference_q, discrepancy_support,
@@ -478,7 +479,7 @@ def main() -> None:
             mismatch["centroid_error_mm"] - full["centroid_error_mm"] >= 0.1
             or mismatch["wasserstein_mm"] - full["wasserstein_mm"] >= 0.1
             or mismatch["peak_error_mm"] - full["peak_error_mm"] >= 1.0
-            or mismatch["total_power_rel_error"] - full["total_power_rel_error"] >= 0.10))
+            or mismatch["total_power_rel_error"] - full["total_power_rel_error"] >= 0.05))
     else:
         harmful = False
 

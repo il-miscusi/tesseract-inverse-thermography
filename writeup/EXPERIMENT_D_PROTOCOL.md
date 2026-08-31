@@ -59,8 +59,8 @@ absolute fit gate, does it move the diagnosis by a practically material amount?
 
 1. `full`: the generating camera (PSF 1.2 px, gain 25, offset 500, ambient
    295 K, tan-half-FOV 0.45, declared pose homographies).
-2. `mismatch`: the same radiometry and optics, but a fixed +0.005 plate-fraction
-   x translation in the sensor-to-plate homography (0.1 mm on the 20 mm plate).
+2. `mismatch`: the same geometry, optics, gain, and offset, but the known
+   emissivity map is scaled by 0.95 (a fixed 5% calibration error).
 
 The mismatch is not called plausible merely because it is close to the full
 arm. Plausibility is evaluated independently on the held-out pose.
@@ -83,7 +83,7 @@ A diagnosis is operationally useful when centroid error ≤1.0 mm, peak error
 ≤1.5 mm, and total-power relative error ≤20%. A mismatch is materially harmful
 when it passes the same absolute fit gate yet increases centroid or Wasserstein
 error by at least 0.1 mm, peak error by at least 1.0 mm, or total-power error by
-at least 10 percentage points.
+at least 5 percentage points.
 
 ## Bank reporting
 
@@ -176,3 +176,14 @@ final mismatch is therefore 0.1 mm. For die/package fault localization this is
 a meaningful sub-cell displacement, so material harm is predeclared as at least
 0.1 mm additional centroid or Wasserstein error. Peak and power thresholds are
 unchanged. The bank remains untouched.
+
+## Development amendment D9 — emissivity calibration risk
+
+The 0.1 mm pose arm reached 3.48 counts held-out RMS but failed whiteness with
+lag-1 correlations 0.61–0.68; it is retained and rejected. The final mismatch
+family is a 5% emissivity-scale error with correct pose, optics, gain, and
+offset. Emissivity is a dominant quantitative-thermography uncertainty and can
+trade against inferred temperature/source power without an obvious geometric
+residual. Material harm is predeclared as at least five percentage points of
+additional total-power error, while location thresholds remain unchanged. No
+bank scene has been run.

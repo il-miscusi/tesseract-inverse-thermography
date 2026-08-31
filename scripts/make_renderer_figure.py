@@ -84,12 +84,12 @@ def main() -> None:
         clean(ax)
 
     fig.text(0.5, 0.005,
-             f"Modest calibration error still fits within 2.14× the calibrated RMS, "
-             f"but moves the inferred hotspot an additional {delta_centroid:.2f} cells.  "
+             f"Calibration error moves the inferred hotspot an additional {delta_centroid:.2f} cells; "
+             "both image fits remain above the 2-count noise scale.  "
              "Source panels are normalized individually; power ratios are printed.",
              ha="center", fontsize=8.5, color=ACCENT2)
     fig.suptitle(
-        "A plausible thermogram fit can still give the wrong diagnosis — the renderer is load-bearing",
+        "Calibration shifts the diagnosis under independent-grid model discrepancy",
         fontsize=12.5, y=1.015, color=INK,
     )
     fig.tight_layout(rect=[0, 0.035, 1, 0.98])

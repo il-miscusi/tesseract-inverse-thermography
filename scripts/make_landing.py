@@ -169,7 +169,7 @@ def main() -> None:
       <div class="lbl">finite-difference error through four served containers · {container['seconds']:.0f} s · {container['verdict']}</div></div>
   </div>
 
-  <h2 id="chain">The gradient no single framework can trace</h2>
+  <h2 id="chain">One operational gradient across native stacks</h2>
   <p>The temperature field solves a fixed point spanning a PyTorch viscosity closure, a
      Fortran Darcy solver with a pen-and-paper adjoint, and a JAX heat-transport model.
      The camera renders that equilibrium to counts. Differentiating the composition uses
@@ -204,7 +204,8 @@ def main() -> None:
      (PSF 0.9 vs 1.2 px, gain +5%, offset +10 counts, ambient +3 K, and a small FOV error)
      still fits within {cm['pixel_rms_counts'] / cf['pixel_rms_counts']:.2f}&times; the
      calibrated RMS, but moves the inferred hotspot an additional {centroid_excess:.2f}
-     cells. This passes the committed-before-results diagnostic-necessity gate.</p>
+     cells. Both fits remain far above the {c['noise_counts']:.0f}-count noise scale,
+     so this is calibration-sensitivity evidence, not a plausible-fit claim.</p>
   <p class="note">The result is deliberately mixed: blackbody and no-vignetting models
      are visibly rejectable, while removing PSF blur does not worsen localization and
      improves coarse-grid source L2. The evidence supports calibration sensitivity, not
@@ -217,9 +218,9 @@ def main() -> None:
      (Kirchhoff), a sensor-to-plate homography with differentiable bilinear sampling, a
      Gaussian PSF whose width is itself a parameter, cos<sup>4</sup> vignetting, then gain
      and offset to digital counts. Every stage moves the measured image; every stage is
-     differentiable. Camera parameters are recoverable too: experiment&nbsp;A re-estimates
-     emissivity, PSF width, gain and offset from one image (emissivity RMSE
-     {arm0['eps_rmse']:.3f}, gain to {100 * arm0['gain_rel_err']:.1f}% at zero noise).</p>
+     differentiable. Experiment&nbsp;A tests single-frame calibration and exposes its
+     identifiability limit: gain is within {100 * arm0['gain_rel_err']:.1f}% at zero noise,
+     but emissivity RMSE remains {arm0['eps_rmse']:.3f} and PSF/offset are not recovered.</p>
   <figure><img src="assets/radiometry.png" alt="Planck curve and per-stage ablation strip"></figure>
 
   <footer>

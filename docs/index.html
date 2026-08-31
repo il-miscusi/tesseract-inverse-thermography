@@ -84,7 +84,7 @@
       <div class="lbl">finite-difference error through four served containers · 80 s · PASS</div></div>
   </div>
 
-  <h2 id="chain">The gradient no single framework can trace</h2>
+  <h2 id="chain">One operational gradient across native stacks</h2>
   <p>The temperature field solves a fixed point spanning a PyTorch viscosity closure, a
      Fortran Darcy solver with a pen-and-paper adjoint, and a JAX heat-transport model.
      The camera renders that equilibrium to counts. Differentiating the composition uses
@@ -119,7 +119,8 @@
      (PSF 0.9 vs 1.2 px, gain +5%, offset +10 counts, ambient +3 K, and a small FOV error)
      still fits within 2.14&times; the
      calibrated RMS, but moves the inferred hotspot an additional 1.82
-     cells. This passes the committed-before-results diagnostic-necessity gate.</p>
+     cells. Both fits remain far above the 2-count noise scale,
+     so this is calibration-sensitivity evidence, not a plausible-fit claim.</p>
   <p class="note">The result is deliberately mixed: blackbody and no-vignetting models
      are visibly rejectable, while removing PSF blur does not worsen localization and
      improves coarse-grid source L2. The evidence supports calibration sensitivity, not
@@ -132,9 +133,9 @@
      (Kirchhoff), a sensor-to-plate homography with differentiable bilinear sampling, a
      Gaussian PSF whose width is itself a parameter, cos<sup>4</sup> vignetting, then gain
      and offset to digital counts. Every stage moves the measured image; every stage is
-     differentiable. Camera parameters are recoverable too: experiment&nbsp;A re-estimates
-     emissivity, PSF width, gain and offset from one image (emissivity RMSE
-     0.101, gain to 0.2% at zero noise).</p>
+     differentiable. Experiment&nbsp;A tests single-frame calibration and exposes its
+     identifiability limit: gain is within 0.2% at zero noise,
+     but emissivity RMSE remains 0.101 and PSF/offset are not recovered.</p>
   <figure><img src="assets/radiometry.png" alt="Planck curve and per-stage ablation strip"></figure>
 
   <footer>

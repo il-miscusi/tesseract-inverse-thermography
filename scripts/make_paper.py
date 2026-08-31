@@ -129,7 +129,7 @@ def main() -> None:
     pdf.drawString(M, y, "Usi Adia-Nimuwa | github.com/il-miscusi/tesseract-inverse-thermography")
     y -= 16
     section_rule(pdf, y); y -= 14
-    y = p(pdf, "<b>Abstract.</b> A thermal image is not temperature. It is band-integrated Planck radiance, modified by emissivity, reflected ambient, projection, optical blur, vignetting, and sensor calibration. We implement that measurement model as a differentiable JAX Tesseract and pull a pixel loss through it, through a coupled flow-heat fixed point, and back to an unknown volumetric heat source. The coupled system spans a PyTorch viscosity closure, a Fortran Darcy/Brinkman solver with a hand-derived adjoint, and JAX heat transport. The complete pixels-to-source derivative matches finite differences at %.2e in-process and %.2e through four served containers. Under independent truth/inversion grids, a modest camera-calibration mismatch remains within 2.14x of the calibrated pixel RMS yet moves the inferred hotspot an additional %.2f coarse cells. The renderer therefore changes the physical diagnosis; it is not a visualization layer." % (grad["best_rel_err"], container["best_rel_err"], centroid_excess), M, y, W - 2 * M)
+    y = p(pdf, "<b>Abstract.</b> A thermal image is not temperature. It is band-integrated Planck radiance, modified by emissivity, reflected ambient, projection, optical blur, vignetting, and sensor calibration. We implement that measurement model as a differentiable JAX Tesseract and pull a pixel loss through it, through a coupled flow-heat fixed point, and back to an unknown volumetric heat source. The coupled system spans a PyTorch viscosity closure, a Fortran Darcy/Brinkman solver with a hand-derived adjoint, and JAX heat transport. The complete pixels-to-source derivative matches finite differences at %.2e in-process and %.2e through four served containers. Under independent truth/inversion grids, a camera-calibration mismatch moves the inferred hotspot an additional %.2f coarse cells, but both recovered images remain above the sensor-noise scale. This is calibration-sensitivity evidence, not a plausible-fit claim." % (grad["best_rel_err"], container["best_rel_err"], centroid_excess), M, y, W - 2 * M)
     y -= 12
     image_contain(pdf, ROOT / "figures/hero.png", M, y - 146, W - 2 * M, 146)
     y -= 154
@@ -185,13 +185,13 @@ def main() -> None:
     yr = draw_table(pdf, table, xr, yr, [col * 0.66, col * 0.34])
     yr -= 10
     yr = p(pdf, "Why Tesseract is load-bearing", xr, yr, col, H2)
-    p(pdf, "JAX cannot trace the PyTorch tape or the Fortran binary; neither tape contains the equilibrium solve. Tesseract's common apply/VJP contract is the compositional abstraction. Removing it does not merely slow the system: it removes the cross-language derivative needed by the inverse problem.", xr, yr, col)
+    p(pdf, "JAX cannot trace the PyTorch tape or the Fortran binary; neither tape contains the equilibrium solve. A custom callback layer or rewrite could expose the same mathematical derivative. Tesseract supplies a typed, remotely executable composition without rewriting the native solvers.", xr, yr, col)
     pdf.showPage()
 
     # Page 3 - decisive evidence.
     page_base(pdf, 3, "Evidence")
     y = H - 54
-    y = p(pdf, "The renderer changes the diagnosis", M, y, W - 2 * M, H1)
+    y = p(pdf, "Calibration shifts the diagnosis under model discrepancy", M, y, W - 2 * M, H1)
     y = p(pdf, "Experiment C was committed before its first result-producing run. Observations come from the complete camera over a 64x32 coupled solve; all recoveries invert at 32x16 with identical physics, data, TV prior, initialization, optimizer, and budget. Only the assumed camera changes.", M, y, W - 2 * M)
     y -= 7
     image_contain(pdf, ROOT / "figures/renderer_necessity.png", M, y - 276, W - 2 * M, 276)
@@ -210,7 +210,7 @@ def main() -> None:
     y = draw_table(pdf, rows, M, y, [128, 72, 72, 72, 72, 64])
     y -= 10
     col = (W - 2 * M - 16) / 2
-    p(pdf, "<b>Predeclared verdict: PASS.</b> A simplified arm must fit within 3x the calibrated RMS and materially worsen source L2, centroid, or power. Only the modest calibration-mismatch arm passes both: 29.82 counts RMS and an additional %.2f-cell centroid error." % centroid_excess, M, y, col)
+    p(pdf, "<b>Historical relative gate: PASS; absolute gate: FAIL.</b> The modest mismatch passes the original 3x-relative criterion, but 29.82 counts RMS and the calibrated 13.95 counts both exceed the 2-count noise scale. The result cannot support a plausible-fit claim.", M, y, col)
     p(pdf, "<b>Negative evidence retained.</b> Blackbody and no-vignetting models are visibly rejectable. Removing PSF blur fits nearly as well and improves coarse-grid source L2 from %.3f to %.3f. The supported claim is calibration sensitivity, not that every optical stage is indispensable." % (cf["rel_l2"], cdata["results"]["no_psf"]["rel_l2"]), M + col + 16, y, col)
     pdf.showPage()
 
@@ -260,7 +260,7 @@ def main() -> None:
     claims = [
         ["claim", "direct evidence", "boundary"],
         ["Cross-framework derivative is correct", "two end-to-end FD receipts", "directional checks, small grids"],
-        ["Renderer calibration changes diagnosis", "Experiment C, +1.82-cell shift", "one fixed mismatch"],
+        ["Calibration sensitivity under model discrepancy", "Experiment C, +1.82-cell shift", "fits above noise scale"],
         ["Coupled model improves same-grid recovery", "Experiment B v2, 0.137 vs 0.246 L2", "both arms hit budget"],
         ["Every optical stage is necessary", "not supported: no-PSF is negative", "claim rejected"],
     ]

@@ -29,8 +29,8 @@ measurement model.
 
 ## 2. The composition, and why the boundaries are genuine
 
-The forward map is composed from four Tesseracts, each differentiated by a
-different mechanism:
+The forward map is composed from four Tesseracts spanning three native
+derivative regimes and one implicit-adjoint orchestration layer:
 
 | component | language / framework | derivative |
 |---|---|---|
@@ -43,12 +43,12 @@ These are not one framework wearing four hats. Fortran has no tape at all —
 its adjoint is derived by hand from the discrete equations and verified against
 finite differences. The JAX and PyTorch tapes are mutually invisible. And the
 equilibrium temperature T* is defined only implicitly, as the fixed point of
-T = Heat(γ, Flow(γ, Viscosity(T)); q), so even a single-framework
-implementation could not tape through it; the adjoint must come from the
-implicit function theorem. Tesseract's uniform `apply` /
-`vector_jacobian_product` contract is what makes these four derivative
-mechanisms composable as one chain rule. Without it there is no slower
-fallback — the pixels→q gradient does not exist.
+T = Heat(γ, Flow(γ, Viscosity(T)); q), so the adjoint is obtained with the
+implicit function theorem instead of an unrolled tape. A monolithic rewrite or
+custom callback layer could expose the same mathematical derivative.
+Tesseract's uniform `apply` / `vector_jacobian_product` contract makes the four
+components composable, remotely executable, and replaceable without rewriting
+their native implementations.
 
 ## 3. The renderer
 
@@ -105,19 +105,19 @@ criteria. Its reporting rule binds every number below to a JSON artifact in
 `figures/` written by the producing script. The original run is governed by
 the protocol's Deviations section; the rerun is declared under Amendment v2.
 
-### Experiment A — camera self-calibration
+### Experiment A — camera calibration identifiability
 
 From one image of a known temperature field: recover the 32×16 emissivity map,
 PSF width, gain, and offset, at noise σ ∈ {0, 1, 2, 5, 10} counts
 (`figures/experiment_a.json`).
 
 - Gain recovered to **0.20–0.21 % relative error** at every noise level.
-- The declared identifiability caveat held: a global gain↔emissivity
+- The joint calibration failed outside gain: a global gain↔emissivity
   rescaling is only broken by reflected ambient and offset, so individual PSF
   and offset estimates from a single image stayed weakly identified
   (σ absolute error 0.91 px; offset relative error 19.0 %), while the
-  gain·ε product error stayed at 8.7 %. We report this as prior-resolved
-  rather than claiming per-parameter success the data cannot support.
+  gain·ε product error stayed at 8.7 %. This is an identifiability failure from
+  one frame, not a successful recovery of the camera parameters.
 
 ### Experiment B — source recovery through the physics
 
@@ -169,11 +169,12 @@ and modest-calibration-mismatch arms.
 
 The calibrated renderer ends at 13.95 counts pixel RMS, 0.78-cell centroid
 error, and 0.885 total-power ratio. The modest mismatch ends at 29.82 counts
-RMS — within the predeclared 3× plausibility envelope — but shifts the centroid
-to 2.60 cells and power to 0.807. Its additional **1.82-cell** error passes the
-fixed diagnostic-necessity criterion. The renderer is therefore load-bearing
-for the inferred location even when the image-space fit is not catastrophically
-bad.
+RMS and shifts the centroid to 2.60 cells and power to 0.807. Its additional
+**1.82-cell** error passes the originally declared relative criterion, but both
+fits are far above the 2-count sensor-noise scale. Experiment C therefore shows
+that calibration changes the inferred location under discretization mismatch;
+it does **not** establish a plausible sensor-level fit or a successful
+source-map reconstruction.
 
 The ablation also bounds the claim. Blackbody and no-vignetting assumptions
 are visibly rejectable (54.32 and 142.42 counts RMS). Removing PSF blur fits

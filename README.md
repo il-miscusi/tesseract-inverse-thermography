@@ -26,7 +26,7 @@ T* solves  T = Heat(gamma, Flow(gamma, Viscosity(T)); q)
 pixel loss -> camera VJP -> coupled implicit adjoint -> dJ/dq
 ```
 
-Four components, four independent differentiation systems, one gradient:
+Four components, three native derivative regimes, one implicit adjoint:
 
 - **Thermal camera** — JAX autodiff. Band-integrated Planck radiance over
   8–14 µm, grey opaque surfaces with reflected ambient, a homography with
@@ -44,18 +44,17 @@ Four components, four independent differentiation systems, one gradient:
 
 The component boundaries above are real, not decorative. A Fortran solver has no
 autodiff to expose; PyTorch and JAX tapes cannot see each other; and the
-coupled temperature field is defined implicitly by a fixed point, so no single
-framework's tape could record it even in principle. Tesseract's contract — each
-component publishes `apply` and `vector_jacobian_product` behind a typed
-interface — is what lets a matrix-free implicit-function-theorem adjoint treat
-a hand-written Fortran adjoint, two ML tapes, and a rendering VJP as
-interchangeable parts of one chain rule. The fast judge and CI gates use
-Tesseract's in-process API mode; the separate `make verify-containers` gate
-builds and serves all four images, then finite-differences the complete
-pixels-to-source derivative across the real HTTP/container boundaries. Remove
-the Tesseract contract and you do not get a
-slower version of this system; you get four gradients that cannot be composed.
-The pixels→source derivative simply stops existing.
+coupled temperature field is defined implicitly by a fixed point. A monolithic
+rewrite or custom callback layer could expose this derivative, but Tesseract's
+contract — each component publishes `apply` and `vector_jacobian_product`
+behind a typed interface — makes it operational, modular, remotely executable,
+and replaceable without rewriting the native solvers. It lets a matrix-free
+implicit-function-theorem adjoint treat a hand-written Fortran adjoint, two ML
+tapes, and a rendering VJP as interchangeable parts of one chain rule. The fast
+judge and CI gates use Tesseract's in-process API mode; the separate
+`make verify-containers` gate builds and serves all four images, then
+finite-differences the complete pixels-to-source derivative across real
+HTTP/container boundaries. The same optimizer runs in both deployment modes.
 
 The problem is also not solvable component-by-component. Calibrating the camera
 needs the physics to say what the plate actually looks like; recovering the
@@ -96,13 +95,14 @@ The full protocol — grids, seeds, priors, optimizer settings, success criteria
 ([`writeup/PROTOCOL.md`](writeup/PROTOCOL.md)). Failures are reported at the
 same volume as successes.
 
-**A — camera self-calibration (inverse rendering).** From one image of a known
-temperature field, recover the spatial emissivity map, PSF width, gain, and
-offset across five fixed noise levels. Gain was recovered to 0.20–0.21%
-relative error at every noise level. Separate PSF and offset estimates stayed
-weakly identified from a single image (PSF absolute error 0.91 px, offset
-relative error 19.0%) — the pre-declared gain/emissivity ambiguity, measured
-and reported rather than hidden behind an image-loss number.
+**A — camera calibration identifiability test (inverse rendering).** From one
+image of a known temperature field, recover the spatial emissivity map, PSF
+width, gain, and offset across five fixed noise levels. Gain was recovered to
+0.20–0.21% relative error at every noise level. The joint calibration
+**failed** to recover the remaining parameters: PSF absolute error was 0.91 px,
+offset relative error was 19.0%, and gain-times-emissivity relative error was
+8.7%. This is an identifiability result, not evidence that all camera
+parameters are recoverable from one frame.
 
 **B — source recovery through the physics.** From one noisy thermal image,
 recover a 32×16 non-negative two-hotspot heat-source map, using the coupled
@@ -128,23 +128,25 @@ seed-and-configuration-stamped artifacts in
 [`figures/experiment_b.json`](figures/experiment_b.json), with the recovered
 field arrays in the matching NPZ files.
 
-**C — renderer necessity under independent discretization.** Observations now
+**C — renderer sensitivity under independent discretization.** Observations
 come from a 64×32 coupled solve and inversion runs at 32×16, eliminating the
 same-grid inverse crime. Five budget-matched recoveries vary only the assumed
 camera. The calibrated renderer localizes the source centroid within **0.78
 cells**. A modest calibration mismatch (PSF 0.9 vs 1.2 px, gain +5%, offset
-+10 counts, ambient +3 K, and a small FOV error) still fits within **2.14×**
-the calibrated pixel RMS, but shifts the inferred hotspot to **2.60 cells** —
-an additional **1.82-cell** diagnostic error. This passes the
-committed-before-results criterion in
-[`writeup/RENDERER_PROTOCOL.md`](writeup/RENDERER_PROTOCOL.md).
++10 counts, ambient +3 K, and a small FOV error) shifts it to **2.60 cells**, an
+additional **1.82-cell** error. However, its 29.82-count RMS and even the
+calibrated arm's 13.95-count RMS are far above the 2-count noise scale.
+Experiment C demonstrates calibration sensitivity under model discrepancy,
+but **does not establish that either recovered image is a plausible
+sensor-noise-level fit**. Its old relative 3x criterion is retained as protocol
+history and is not used as an absolute scientific gate.
 
 The result is not cherry-picked: blackbody and no-vignetting assumptions are
 visibly rejectable, while removing the PSF does *not* hurt localization and
-improves coarse-grid source L2. The supported claim is precise: camera
-calibration is load-bearing for diagnosis; not every optical stage is.
+improves coarse-grid source L2. The supported claim is calibration sensitivity,
+not plausible diagnosis or the necessity of every optical stage.
 
-![Renderer necessity: a plausible fit changes the inferred hotspot](figures/renderer_necessity.png)
+![Renderer sensitivity under independent discretization](figures/renderer_necessity.png)
 
 ## Why this matters outside a hackathon
 

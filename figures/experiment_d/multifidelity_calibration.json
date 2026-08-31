@@ -18,7 +18,19 @@
     32,
     16
   ],
+  "pixel_basis_shape": [
+    3,
+    20,
+    96,
+    64
+  ],
+  "camera_tilts": [
+    0.22,
+    -0.18,
+    0.05
+  ],
   "max_abs_offset_K": 3.047717622468099,
   "max_abs_basis_K": 0.028268913346721547,
-  "seconds": 101.67653179168701
+  "max_abs_pixel_basis_counts": 0.6654585167261757,
+  "seconds": 100.45147490501404
 }

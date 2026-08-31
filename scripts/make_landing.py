@@ -72,7 +72,11 @@ def main() -> None:
     dpair = d["paired_diagnostic_error"]["total_power_relative_error"]
     dci = [100 * value for value in dpair["median_bootstrap_95_ci"]]
 
-    gif_html = (f'<img src="assets/recovery.gif" alt="Recovery animation" loading="lazy">'
+    gif_html = ('<figure><img src="assets/recovery.gif" alt="Recovery animation" loading="lazy">'
+                '<figcaption>Recorded run: frozen unseen scene 101 (Experiment D bank), '
+                'calibrated arm &mdash; per-iteration snapshots from '
+                '<code>figures/experiment_d/bank/bank_seed_101.npz</code>, not a demo.'
+                '</figcaption></figure>'
                 if have["recovery.gif"] else "")
 
     rows = "".join(

@@ -60,7 +60,7 @@ absolute fit gate, does it move the diagnosis by a practically material amount?
 1. `full`: the generating camera (PSF 1.2 px, gain 25, offset 500, ambient
    295 K, tan-half-FOV 0.45, declared pose homographies).
 2. `mismatch`: the same geometry, optics, gain, and offset, but the known
-   emissivity map is scaled by 0.95 (a fixed 5% calibration error).
+   emissivity map is scaled by 0.96 (a fixed 4% calibration error).
 
 The mismatch is not called plausible merely because it is close to the full
 arm. Plausibility is evaluated independently on the held-out pose.
@@ -187,3 +187,12 @@ trade against inferred temperature/source power without an obvious geometric
 residual. Material harm is predeclared as at least five percentage points of
 additional total-power error, while location thresholds remain unchanged. No
 bank scene has been run.
+
+## Development amendment D10 — largest white emissivity mismatch
+
+The 5% emissivity arm achieved 2.096 counts RMS and 6.46% power error, but its
+vertical lag-1 correlation was 0.10026 against the fixed 0.10000 limit. The
+whiteness gate is not relaxed. The final mismatch is 4% emissivity error; the
+development result predicts it should clear whiteness while retaining about a
+five-percentage-point power bias. The material threshold and every other gate
+remain unchanged. The bank remains untouched.

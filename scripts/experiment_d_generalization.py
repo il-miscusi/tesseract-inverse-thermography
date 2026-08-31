@@ -271,7 +271,7 @@ def camera_spec(arm: str) -> dict:
         return {"psf_sigma": SIGMA_TRUE, "gain": GAIN_TRUE,
                 "offset": OFFSET_TRUE, "t_ambient": 295.0,
                 "half_fov_tan": 0.45, "tilt_delta": 0.0,
-                "pose_dx_fraction": 0.0, "emissivity_scale": 0.95}
+                "pose_dx_fraction": 0.0, "emissivity_scale": 0.96}
     raise ValueError(f"unknown arm {arm}")
 
 

@@ -249,7 +249,7 @@ def recover(fwd: MultiViewForward, measurements, mask, maxiter: int) -> dict:
 
     result = minimize(fg, z0, jac=True, method="L-BFGS-B",
                       options={"maxiter": maxiter, "maxfun": 3 * maxiter,
-                               "gtol": 1e-7, "ftol": 1e-12, "maxls": 30})
+                               "gtol": 1e-7, "ftol": 1e-6, "maxls": 30})
     q_final = unpack(result.x)
     if not snapshots or not np.array_equal(snapshots[-1], state["best_q"]):
         snapshots.append(state["best_q"].copy())
@@ -265,11 +265,13 @@ def camera_spec(arm: str) -> dict:
     if arm == "full":
         return {"psf_sigma": SIGMA_TRUE, "gain": GAIN_TRUE,
                 "offset": OFFSET_TRUE, "t_ambient": 295.0,
-                "half_fov_tan": 0.45, "tilt_delta": 0.0}
+                "half_fov_tan": 0.45, "tilt_delta": 0.0,
+                "pose_dx_fraction": 0.0}
     if arm == "mismatch":
-        return {"psf_sigma": 1.1, "gain": 25.25, "offset": 502.0,
-                "t_ambient": 296.0, "half_fov_tan": 0.46,
-                "tilt_delta": 0.015}
+        return {"psf_sigma": SIGMA_TRUE, "gain": GAIN_TRUE,
+                "offset": OFFSET_TRUE, "t_ambient": 295.0,
+                "half_fov_tan": 0.45, "tilt_delta": 0.0,
+                "pose_dx_fraction": 0.03}
     raise ValueError(f"unknown arm {arm}")
 
 
@@ -279,6 +281,13 @@ def evaluate_pixel_correction(q: np.ndarray, reference_q: np.ndarray,
     """Evaluate one pose's calibrated source-to-pixel discrepancy."""
     coeff = ((np.asarray(q) - reference_q).ravel()[support] / delta_q)
     return np.asarray(offset) + np.tensordot(coeff, basis, axes=(0, 0))
+
+
+def assumed_homography(tilt: float, spec: dict) -> np.ndarray:
+    """Declared pose plus a plate-plane x translation calibration error."""
+    H = default_homography(tilt + spec["tilt_delta"]).copy()
+    H[0, :] += spec["pose_dx_fraction"] * H[2, :]
+    return H
 
 
 def main() -> None:
@@ -409,11 +418,11 @@ def main() -> None:
         with ExitStack() as stack:
             system = stack.enter_context(coupled_session(plate))
             cams = [stack.enter_context(camera_session({**sensor,
-                    "homography": default_homography(t + spec["tilt_delta"]),
+                    "homography": assumed_homography(t, spec),
                     "t_ambient": spec["t_ambient"],
                     "half_fov_tan": spec["half_fov_tan"]})) for t in TRAIN_TILTS]
             hold_cam = stack.enter_context(camera_session({**sensor,
-                    "homography": default_homography(HOLDOUT_TILT + spec["tilt_delta"]),
+                    "homography": assumed_homography(HOLDOUT_TILT, spec),
                     "t_ambient": spec["t_ambient"],
                     "half_fov_tan": spec["half_fov_tan"]}))
             fwd = MultiViewForward(system, cams, train_masks, gamma, eps, spec["psf_sigma"],

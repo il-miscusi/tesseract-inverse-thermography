@@ -46,7 +46,7 @@ absolute fit gate, does it move the diagnosis by a practically material amount?
   count, widths, amplitudes, and total power remain unknown.
 - L-BFGS-B optimizes a softplus parameterization from a flat 0.02·Q_SCALE
   initialization, with TV weight 3e-4. Maximum 500 iterations / 1500 function
-  evaluations, gradient tolerance 1e-7, and relative function tolerance 1e-12.
+  evaluations, gradient tolerance 1e-7, and relative function tolerance 1e-6.
 - The best evaluated iterate and final SciPy iterate are both stored. A run is
   called converged only when SciPy status is zero; otherwise it is an endpoint.
 - Every scene first scores a discretization oracle: the exact 2×2-area-averaged
@@ -59,8 +59,8 @@ absolute fit gate, does it move the diagnosis by a practically material amount?
 
 1. `full`: the generating camera (PSF 1.2 px, gain 25, offset 500, ambient
    295 K, tan-half-FOV 0.45, declared pose homographies).
-2. `mismatch`: a fixed tolerance perturbation (PSF 1.1 px, gain +1%, offset
-   +2 counts, ambient +1 K, tan-half-FOV 0.46, and +0.015 homography tilt).
+2. `mismatch`: the same radiometry and optics, but a fixed +0.03 plate-fraction
+   x translation in the sensor-to-plate homography (0.6 mm on the 20 mm plate).
 
 The mismatch is not called plausible merely because it is close to the full
 arm. Plausibility is evaluated independently on the held-out pose.
@@ -153,3 +153,16 @@ is measured in pixel space at the two training poses and held-out pose. This is
 the quantity used by the loss and the absolute gate. Its direct pixel-to-source
 VJP is included exactly. Physics calibration loads, reference, delta, bank,
 thresholds, and camera arms are unchanged.
+
+## Development amendment D7 — isolate pose-calibration risk
+
+The original compound mismatch plateaued near 5.5 counts training RMS and was
+therefore visibly rejectable under the unchanged absolute gate. The final
+mismatch isolates a 0.6 mm plate-plane pose translation with otherwise correct
+radiometry and optics. This targets the practitioner question directly: can a
+pose error be absorbed by a shifted fault while pixels still validate? The
+development calibrated arm already reached 1.989 counts held-out RMS, 0.060 mm
+centroid error, and 0.154 mm Wasserstein error. Its post-noise-floor evaluations
+changed the objective by less than 0.1%, so the relative-function tolerance is
+set to 1e-6 before the bank to avoid spending hundreds of evaluations on the
+sixth decimal of a noise-limited objective. The best iterate remains stored.

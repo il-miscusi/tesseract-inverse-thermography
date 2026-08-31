@@ -23,6 +23,12 @@ absolute fit gate, does it move the diagnosis by a practically material amount?
   an independent noise draw derived from its scene seed.
 - The camera records two training poses (homography tilts +0.22 and −0.18) and
   one held-out pose (+0.05). Gaussian sensor noise is σ=2 counts per pixel.
+- Evaluation uses a pose-fixed interior plate ROI: sensor pixels whose mapped
+  plate coordinates are at least 1.5 coarse cells from every plate boundary.
+  The same mask is used by both arms. Mixed silhouette/background pixels are
+  excluded because a cell-centred 32×16 surface and a 64×32 surface represent
+  that sub-pixel geometric edge differently; the claim concerns thermography
+  over the resolved plate surface, not anti-aliasing of its silhouette.
 
 ## Fixed inverse method
 
@@ -78,3 +84,13 @@ absolute fit gate on at least 10/12 scenes and a materially harmful mismatch
 passes that gate on at least 6/12 scenes. Otherwise the result is reported as a
 negative finding and the submission falls back to the verified composition
 claim.
+
+## Development amendment D1 — interior ROI
+
+The first full-resolution development run (seed 0, calibrated arm) reduced
+training half-MSE from 116,193 to 56.15 by evaluation 175 but had plateaued at
+about 10.6 counts RMS. Inspection against Experiment C's stored residuals
+showed the dominant coherent error on the projected plate boundary. The run was
+stopped without producing a result artifact. The interior ROI above was then
+fixed before any bank seed was run. No optimizer, source, or bank setting was
+changed. All subsequent development and bank results must use and store the ROI.

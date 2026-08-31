@@ -52,6 +52,21 @@ def block_average(field: np.ndarray, scale: int) -> np.ndarray:
     return field.reshape(nx // scale, scale, ny // scale, scale).mean(axis=(1, 3))
 
 
+def interior_pixel_mask(homography: np.ndarray, field_shape: tuple[int, int],
+                        sensor_shape: tuple[int, int], margin_cells: float = 1.5) -> np.ndarray:
+    """Pose-fixed ROI excluding the grid-dependent plate silhouette."""
+    n_u, n_v = sensor_shape
+    u = (np.arange(n_u) + 0.5) / n_u
+    v = (np.arange(n_v) + 0.5) / n_v
+    U, V = np.meshgrid(u, v, indexing="ij")
+    H = np.asarray(homography, float)
+    w = H[2, 0] * U + H[2, 1] * V + H[2, 2]
+    x = (H[0, 0] * U + H[0, 1] * V + H[0, 2]) / w
+    y = (H[1, 0] * U + H[1, 1] * V + H[1, 2]) / w
+    mx, my = margin_cells / field_shape[0], margin_cells / field_shape[1]
+    return (x >= mx) & (x <= 1.0 - mx) & (y >= my) & (y <= 1.0 - my)
+
+
 def fault_scene(shape: tuple[int, int], seed: int, plate: ColdPlate) -> tuple[np.ndarray, list[dict]]:
     """Continuous random component faults, clipped to the physical chip."""
     rng = np.random.default_rng(seed)
@@ -71,19 +86,27 @@ def fault_scene(shape: tuple[int, int], seed: int, plate: ColdPlate) -> tuple[np
     return q * chip_mask(shape, plate), blobs
 
 
-def residual_diagnostics(residual: np.ndarray) -> dict:
+def residual_diagnostics(residual: np.ndarray, mask: np.ndarray | None = None) -> dict:
     r = np.asarray(residual, float)
-    centred = r - r.mean()
-    denom = float(np.sum(centred**2))
+    valid = np.ones_like(r, dtype=bool) if mask is None else np.asarray(mask, bool)
+    values = r[valid]
+    mean = float(values.mean())
+    centred = r - mean
 
-    def corr(a, b):
-        return float(np.sum(a * b) / max(denom, 1e-300))
+    def corr(a, b, pair_mask):
+        av, bv = a[pair_mask], b[pair_mask]
+        denom = float(np.sqrt(np.sum(av**2) * np.sum(bv**2)))
+        return float(np.sum(av * bv) / max(denom, 1e-300))
+
+    hmask = valid[1:, :] & valid[:-1, :]
+    vmask = valid[:, 1:] & valid[:, :-1]
 
     return {
-        "rms_counts": float(np.sqrt(np.mean(r**2))),
-        "mean_counts": float(r.mean()),
-        "lag1_horizontal": corr(centred[1:, :], centred[:-1, :]),
-        "lag1_vertical": corr(centred[:, 1:], centred[:, :-1]),
+        "rms_counts": float(np.sqrt(np.mean(values**2))),
+        "mean_counts": mean,
+        "lag1_horizontal": corr(centred[1:, :], centred[:-1, :], hmask),
+        "lag1_vertical": corr(centred[:, 1:], centred[:, :-1], vmask),
+        "pixels": int(valid.sum()),
     }
 
 
@@ -114,8 +137,9 @@ def physical_metrics(q_rec: np.ndarray, q_true: np.ndarray, plate: ColdPlate) ->
 
 
 class MultiViewForward:
-    def __init__(self, system, cameras, gamma, eps, psf_sigma, gain, offset, t_init):
+    def __init__(self, system, cameras, masks, gamma, eps, psf_sigma, gain, offset, t_init):
         self.system, self.cameras = system, cameras
+        self.masks = masks
         self.gamma, self.eps = gamma, eps
         self.psf_sigma, self.gain, self.offset = psf_sigma, gain, offset
         self.t_init, self._T_warm = t_init, None
@@ -138,10 +162,11 @@ class MultiViewForward:
         images = self.render(st)
         dJ_dT = np.zeros_like(st.T)
         loss = 0.0
-        for cam, image, measured in zip(self.cameras, images, measurements):
+        for cam, mask, image, measured in zip(self.cameras, self.masks, images, measurements):
             residual = image - measured
-            loss += 0.5 * float(np.mean(residual**2)) / len(images)
-            cot = residual / (len(images) * residual.size)
+            loss += 0.5 * float(np.mean(residual[mask]**2)) / len(images)
+            cot = np.zeros_like(residual)
+            cot[mask] = residual[mask] / (len(images) * int(mask.sum()))
             dJ_dT += cam.vjp(st.T, self.eps, self.psf_sigma, self.gain,
                              self.offset, cot, wrt=("T",))["T"]
         grad, matvecs, ok = gradient_wrt_q(self.system, self.gamma, st, dJ_dT)
@@ -242,6 +267,11 @@ def main() -> None:
 
     train_truth_params = [{**sensor, "homography": default_homography(t)} for t in TRAIN_TILTS]
     hold_truth_params = {**sensor, "homography": default_homography(HOLDOUT_TILT)}
+    train_masks = [interior_pixel_mask(p["homography"], plate.shape,
+                                      (sensor["n_u"], sensor["n_v"]))
+                   for p in train_truth_params]
+    holdout_mask = interior_pixel_mask(hold_truth_params["homography"], plate.shape,
+                                       (sensor["n_u"], sensor["n_v"]))
     with ExitStack() as stack:
         truth_system = stack.enter_context(coupled_session(truth_plate))
         truth_cams = [stack.enter_context(camera_session({**p, "t_ambient": 295.0,
@@ -265,6 +295,8 @@ def main() -> None:
 
     results, arrays = {}, {"q_truth": q_truth, "q_target": q_target,
                            "gamma": gamma, "support": support,
+                           "train_masks": np.asarray(train_masks),
+                           "holdout_mask": holdout_mask,
                            "measured_holdout": measured_holdout,
                            "clean_holdout": clean_holdout}
     for arm in args.arms:
@@ -280,18 +312,21 @@ def main() -> None:
                     "homography": default_homography(HOLDOUT_TILT + spec["tilt_delta"]),
                     "t_ambient": spec["t_ambient"],
                     "half_fov_tan": spec["half_fov_tan"]}))
-            fwd = MultiViewForward(system, cams, gamma, eps, spec["psf_sigma"],
+            fwd = MultiViewForward(system, cams, train_masks, gamma, eps, spec["psf_sigma"],
                                    spec["gain"], spec["offset"], plate.t_in)
             rec = recover(fwd, measured_train, support, args.maxiter)
             st = fwd.solve(rec["q_best"])
             rendered_train = fwd.render(st)
             rendered_holdout = hold_cam.apply(st.T, eps, spec["psf_sigma"],
                                                spec["gain"], spec["offset"])
-        train_residual = np.concatenate([(r - y).ravel()
-                                         for r, y in zip(rendered_train, measured_train)])
+        train_values = np.concatenate([(r - y)[m]
+                                       for r, y, m in zip(rendered_train, measured_train,
+                                                          train_masks)])
         holdout_residual = rendered_holdout - measured_holdout
-        train_diag = residual_diagnostics(train_residual.reshape(-1, 1))
-        hold_diag = residual_diagnostics(holdout_residual)
+        train_diag = {"rms_counts": float(np.sqrt(np.mean(train_values**2))),
+                      "mean_counts": float(train_values.mean()),
+                      "pixels": int(train_values.size)}
+        hold_diag = residual_diagnostics(holdout_residual, holdout_mask)
         metrics = physical_metrics(rec["q_best"], q_target, plate)
         plausible = (hold_diag["rms_counts"] <= 2.0 * NOISE_COUNTS
                      and abs(hold_diag["mean_counts"]) <= 0.25 * NOISE_COUNTS

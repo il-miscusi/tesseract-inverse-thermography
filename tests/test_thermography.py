@@ -24,7 +24,8 @@ from coupler.thermography import (
 
 
 def test_experiment_d_support_and_block_average():
-    from scripts.experiment_d_generalization import block_average, chip_mask
+    from scripts.experiment_d_generalization import (block_average, chip_mask,
+                                                     interior_pixel_mask)
     from coupler import ColdPlate
 
     plate = ColdPlate(nx=8, ny=8)
@@ -35,6 +36,9 @@ def test_experiment_d_support_and_block_average():
     coarse = block_average(fine, 2)
     assert coarse.shape == (4, 4)
     assert coarse[0, 0] == np.mean(fine[:2, :2])
+    roi = interior_pixel_mask(np.eye(3), (8, 8), (16, 16))
+    assert roi.shape == (16, 16)
+    assert roi.any() and not roi.all()
 
 
 def _fd_grad(fn, q, h=1e-7):

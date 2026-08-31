@@ -271,7 +271,7 @@ def camera_spec(arm: str) -> dict:
         return {"psf_sigma": SIGMA_TRUE, "gain": GAIN_TRUE,
                 "offset": OFFSET_TRUE, "t_ambient": 295.0,
                 "half_fov_tan": 0.45, "tilt_delta": 0.0,
-                "pose_dx_fraction": 0.03}
+                "pose_dx_fraction": 0.005}
     raise ValueError(f"unknown arm {arm}")
 
 
@@ -475,8 +475,8 @@ def main() -> None:
     if "full" in results and "mismatch" in results:
         full, mismatch = results["full"], results["mismatch"]
         harmful = (mismatch["absolute_plausible_fit"] and (
-            mismatch["centroid_error_mm"] - full["centroid_error_mm"] >= 0.5
-            or mismatch["wasserstein_mm"] - full["wasserstein_mm"] >= 0.5
+            mismatch["centroid_error_mm"] - full["centroid_error_mm"] >= 0.1
+            or mismatch["wasserstein_mm"] - full["wasserstein_mm"] >= 0.1
             or mismatch["peak_error_mm"] - full["peak_error_mm"] >= 1.0
             or mismatch["total_power_rel_error"] - full["total_power_rel_error"] >= 0.10))
     else:

@@ -335,8 +335,9 @@ def main() -> None:
                                       temperature_correction)
         oracle_state = oracle_fwd.solve(q_target)
         oracle_train = oracle_fwd.render(oracle_state)
-        oracle_holdout = oracle_hold_cam.apply(oracle_state.T, eps, SIGMA_TRUE,
-                                               GAIN_TRUE, OFFSET_TRUE)
+        oracle_holdout = oracle_hold_cam.apply(
+            oracle_state.T + temperature_correction, eps, SIGMA_TRUE,
+            GAIN_TRUE, OFFSET_TRUE)
     oracle_train_values = np.concatenate([(r - y)[m] for r, y, m in
                                           zip(oracle_train, measured_train, train_masks)])
     oracle_hold_diag = residual_diagnostics(oracle_holdout - measured_holdout,

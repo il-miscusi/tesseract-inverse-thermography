@@ -128,6 +128,15 @@
      before the run (writeup/PROTOCOL.md). Declared criterion: coupled rel_l2 < 0.5 and centroid shift < 1.5 cells (PROTOCOL.md Amendment v2, declared before this run) —
      met: True. Both arms reached the declared 250-iteration
      limit, so the table reports budget-matched endpoints rather than convergence floors.</p>
+  <p><b>Factorial mechanism check.</b> Experiment E keeps the coupled forward
+     values but drops only the implicit feedback term in reverse. Source L<sub>2</sub>
+     becomes 0.241, versus
+     0.137 with the exact implicit adjoint and 0.246
+     with frozen forward physics. Data loss is
+     2.079, between exact-coupled
+     2.022 and frozen-forward 3.339.
+     This separates the effects: forward fidelity dominates pixel fit; exact
+     gradient fidelity improves the inferred source shape.</p>
   <figure><img src="assets/recovery_convergence.png" alt="Convergence, coupled vs one-way"></figure>
   <img src="assets/recovery.gif" alt="Recovery animation" loading="lazy">
 

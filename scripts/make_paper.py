@@ -105,6 +105,7 @@ def main() -> None:
     b = json.loads((ROOT / "figures/experiment_b_v2.json").read_text())
     cdata = json.loads((ROOT / "figures/experiment_c_renderer.json").read_text())
     d = json.loads((ROOT / "figures/experiment_d/experiment_d_summary.json").read_text())
+    e = json.loads((ROOT / "figures/experiment_e_factorial.json").read_text())
     grad = json.loads((ROOT / "figures/e2e_gradient_check.json").read_text())
     container = json.loads((ROOT / "figures/container_e2e_gradient_check.json").read_text())
     rc, ro = b["results"]["coupled"], b["results"]["one_way"]
@@ -235,8 +236,8 @@ def main() -> None:
     y = p(pdf, "What the complete evidence establishes", M, y, W - 2 * M, H1)
     col = (W - 2 * M - 16) / 2
     yl = y
-    yl = p(pdf, "Same-grid source recovery", M, yl, col, H2)
-    yl = p(pdf, "Experiment B v2 recovers the two-hotspot map at relative L2 %.4f, centroid %.2f cells, and power %.3f. A frozen-viscosity forward model ends at L2 %.4f. Both L-BFGS-B arms reach the 250-iteration limit; the comparison is a budget-matched model-mismatch endpoint, not a gradient-only intervention or convergence floor." % (rc["rel_l2"], rc["centroid_shift_cells"], rc["total_power_ratio"], ro["rel_l2"]), M, yl, col)
+    yl = p(pdf, "Forward x gradient factorial", M, yl, col, H2)
+    yl = p(pdf, "Experiment E separates Experiment B's two interventions. Exact coupled forward/gradient reaches source L2 %.4f and data loss %.3f. Keeping the coupled forward but truncating only the implicit reverse feedback converges at L2 %.4f and loss %.3f. Frozen forward/matching gradient reaches L2 %.4f and loss %.3f. Forward fidelity dominates pixel fit; exact gradient fidelity improves source shape on this fixed problem." % (rc["rel_l2"], rc["final_data_loss"], e["coupled_truncated"]["final"]["rel_l2"], e["coupled_truncated"]["final"]["data_loss"], ro["rel_l2"], ro["final_data_loss"]), M, yl, col)
     yl -= 8
     yl = p(pdf, "Historical stress test", M, yl, col, H2)
     yl = p(pdf, "Experiment C first exposed the inverse crime: with 64x32 truth and 32x16 inversion, calibrated source L2 rose to %.3f and pixel RMS to %.2f counts. Its relative calibration-shift gate passed, but the absolute noise-level gate failed. Experiment D repairs representability with independent known-load calibration rather than hiding discrepancy in the source." % (cf["rel_l2"], cf["pixel_rms_counts"]), M, yl, col)
@@ -279,6 +280,7 @@ def main() -> None:
         ["Composed inverse generalizes", "Experiment D, 12/12 useful", "synthetic, known support"],
         ["4% emissivity biases inferred power", "12/12 pairs; +4.42 pp median", "harm prevalence claim failed"],
         ["Coupled model improves same-grid recovery", "Experiment B v2, 0.137 vs 0.246 L2", "both arms hit budget"],
+        ["Exact adjoint improves source shape", "factorial: 0.137 vs 0.241 L2", "one fixed problem"],
     ]
     draw_table(pdf, claims, M, matrix_y - 2, [166, 190, 155], font_size=6.8)
     applications_y = 292

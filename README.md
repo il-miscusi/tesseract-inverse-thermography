@@ -122,6 +122,17 @@ amended (recorded in `PROTOCOL.md` as Amendment v2) and rerun as v2:
 - Numbers from `figures/experiment_b_v2.json`; run log in
   `figures/sweeps/experiment_b_v2_run.log`.
 
+**E — factorial forward/gradient ablation.** To separate the two interventions
+in Experiment B, the missing arm keeps the coupled forward equilibrium but
+drops only the implicit feedback term in reverse. With identical forward
+values, source L2 worsens from **0.1370** (exact implicit adjoint) to **0.2415**
+(truncated gradient), while data loss moves from 2.022 to 2.079. Freezing the
+forward model as well yields L2 0.2457 and data loss 3.339. At the shared
+initialization the truncated gradient has cosine 0.993 with the exact gradient
+but **125% relative L2 error**. This separates the conclusion: coupled forward
+fidelity dominates the pixel fit, while the exact implicit adjoint materially
+improves source shape on this fixed problem.
+
 All numbers above and in the writeup come from the checked-in,
 seed-and-configuration-stamped artifacts in
 [`figures/experiment_a.json`](figures/experiment_a.json) and
@@ -203,6 +214,7 @@ make verify-containers # build/serve 4 images + FD across real boundaries
 make experiment-a  # camera self-calibration
 make experiment-b-v2 # amended source recovery through the coupled equilibrium
 make experiment-c  # renderer necessity with 64x32 truth / 32x16 inversion
+make experiment-e  # coupled/frozen forward × exact/truncated gradient ablation
 make summarize-experiment-d # reproduce frozen-bank statistics and figure
 make animation     # animate a real frozen-bank recovery (seed 101)
 make paper         # regenerate the four-page PDF from committed artifacts

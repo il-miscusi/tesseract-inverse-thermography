@@ -40,6 +40,7 @@ def main() -> None:
     ap.add_argument("--renderer-results", default="figures/experiment_c_renderer.json")
     ap.add_argument("--container-check", default="figures/container_e2e_gradient_check.json")
     ap.add_argument("--experiment-d", default="figures/experiment_d/experiment_d_summary.json")
+    ap.add_argument("--experiment-e", default="figures/experiment_e_factorial.json")
     args = ap.parse_args()
 
     b = json.loads((ROOT / args.results).read_text())
@@ -48,6 +49,7 @@ def main() -> None:
     c = json.loads((ROOT / args.renderer_results).read_text())
     container = json.loads((ROOT / args.container_check).read_text())
     d = json.loads((ROOT / args.experiment_d).read_text())
+    e = json.loads((ROOT / args.experiment_e).read_text())
     rc, ro = b["results"]["coupled"], b["results"]["one_way"]
 
     ASSETS.mkdir(parents=True, exist_ok=True)
@@ -219,6 +221,15 @@ def main() -> None:
      before the run (writeup/PROTOCOL.md). Declared criterion: {b['success_criteria']['declared']} —
      met: {b['success_criteria']['met']}. Both arms reached the declared 250-iteration
      limit, so the table reports budget-matched endpoints rather than convergence floors.</p>
+  <p><b>Factorial mechanism check.</b> Experiment E keeps the coupled forward
+     values but drops only the implicit feedback term in reverse. Source L<sub>2</sub>
+     becomes {e['coupled_truncated']['final']['rel_l2']:.3f}, versus
+     {rc['rel_l2']:.3f} with the exact implicit adjoint and {ro['rel_l2']:.3f}
+     with frozen forward physics. Data loss is
+     {e['coupled_truncated']['final']['data_loss']:.3f}, between exact-coupled
+     {rc['final_data_loss']:.3f} and frozen-forward {ro['final_data_loss']:.3f}.
+     This separates the effects: forward fidelity dominates pixel fit; exact
+     gradient fidelity improves the inferred source shape.</p>
   <figure><img src="assets/recovery_convergence.png" alt="Convergence, coupled vs one-way"></figure>
   {gif_html}
 

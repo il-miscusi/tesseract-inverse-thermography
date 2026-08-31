@@ -158,6 +158,23 @@ data, seeds, and two-arm design are unchanged. Final numbers, from
 The coupled-vs-one-way comparison is reported whatever its sign; if the wrong
 forward model recovers the source just as well, that is the published result.
 
+### Experiment E — separating forward and gradient fidelity
+
+Experiment B changes both the forward physics and its derivative. The
+preregistered factorial addendum (`writeup/FACTORIAL_PROTOCOL.md`) supplies the
+missing arm: the forward solve remains fully coupled, while reverse mode drops
+the `(dG/dT)^T` feedback and sets λ=dJ/dT. Data, initialization, prior, and
+optimizer budget are identical.
+
+The exact coupled arm reaches source L2 **0.1370** and data loss 2.022. The
+coupled-forward/truncated-gradient arm converges at L2 **0.2415** and data loss
+2.079. The frozen-forward/matching-gradient arm reaches L2 0.2457 and data loss
+3.339. At the shared initialization the truncated and exact gradients have
+cosine 0.993 but relative L2 difference **1.251**. Thus the coupled forward
+model accounts for most of the pixel-fit advantage, while the exact implicit
+adjoint materially improves recovered source shape on this problem. This is a
+mechanism ablation, not a universal optimizer claim.
+
 ### Experiment D — frozen unseen-scene generalization bank
 
 Experiment D is the headline scientific test. Its separate protocol

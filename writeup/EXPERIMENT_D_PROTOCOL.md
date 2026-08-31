@@ -29,13 +29,13 @@ absolute fit gate, does it move the diagnosis by a practically material amount?
   excluded because a cell-centred 32×16 surface and a 64×32 surface represent
   that sub-pixel geometric edge differently; the claim concerns thermography
   over the resolved plate surface, not anti-aliasing of its silhouette.
-- Before fault-scene inversion, two separate known calibration states (zero
-  load and 0.5·Q_SCALE uniformly over the chip footprint) are solved on both
-  grids. Per coarse cell, those two points define the frozen affine map from
-  coarse temperature to block-averaged fine temperature. It is applied before
-  the camera for every arm and bank scene; its slope is pulled back through the
-  camera VJP into the implicit adjoint. No fault-scene or bank observation
-  contributes to this correction.
+- Before fault-scene inversion, a zero-load state and one known Q_SCALE unit
+  load at each of the 20 admissible coarse chip cells are solved on both grids.
+  Their fine-minus-coarse temperature discrepancies form a frozen 20-column
+  linear correction from source to block-averaged fine temperature. It is
+  applied before the camera for every arm and bank scene. The correction's
+  direct source VJP is added to the coarse model's implicit-adjoint gradient.
+  No random fault scene or bank observation contributes to this calibration.
 
 ## Fixed inverse method
 
@@ -124,3 +124,13 @@ error is response-dependent, not a constant temperature offset. The same two
 known calibration states are therefore used as an affine transfer, with its
 per-cell slope included in the VJP. This is the final forward-model amendment;
 it was fixed before any bank scene.
+
+## Development amendment D4 — spatial discrepancy Jacobian
+
+The two-state affine oracle reached 7.26 counts RMS, worse than the additive
+model, proving one scalar response per output cell cannot represent how source
+location interacts with the grid. The final calibration therefore measures one
+temperature-discrepancy response per admissible source cell. This 20-column
+linear map is small, independently generated, reusable across all scenes, and
+fully differentiated. The bank remains untouched and the 4-count gate remains
+unchanged.

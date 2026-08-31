@@ -1,5 +1,5 @@
 # Tesseract Hackathon 2026 - Track 05 primary entry
-.PHONY: build build-images judge test verify verify-containers experiment-a experiment-b experiment-b-v2 experiment-c experiment-d-dev audit figures renderer-figure paper animation landing
+.PHONY: build build-images judge test verify verify-containers experiment-a experiment-b experiment-b-v2 experiment-c calibrate-multifidelity experiment-d-dev audit figures renderer-figure paper animation landing
 
 PYTHON ?= python3
 TESSERACT ?= tesseract
@@ -76,6 +76,11 @@ experiment-d-dev:
 	COUPLER_INPROCESS=1 DARCY_SOLVER_BIN="$(CURDIR)/tesseracts/darcy-flow/fortran/darcy" \
 	OMP_NUM_THREADS=1 \
 	"$(PYTHON)" scripts/experiment_d_generalization.py --stage dev --seed 0 --arms full
+
+calibrate-multifidelity:
+	COUPLER_INPROCESS=1 DARCY_SOLVER_BIN="$(CURDIR)/tesseracts/darcy-flow/fortran/darcy" \
+	OMP_NUM_THREADS=1 \
+	"$(PYTHON)" scripts/calibrate_multifidelity.py
 
 audit:
 	"$(PYTHON)" scripts/submission_audit.py

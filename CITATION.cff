@@ -2,8 +2,7 @@ cff-version: 1.2.0
 message: "If you use this work, please cite it as below."
 title: "tesseract-inverse-thermography: differentiable thermal-camera rendering through a live multiphysics equilibrium"
 authors:
-  - alias: "il-miscusi"
-    name: "il-miscusi"
+  - name: "The tesseract-inverse-thermography authors"
 license: Apache-2.0
 repository-code: "https://github.com/il-miscusi/tesseract-inverse-thermography"
 date-released: "2026-08-30"

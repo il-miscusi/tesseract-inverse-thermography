@@ -69,7 +69,7 @@ def page_base(c: canvas.Canvas, number: int, section: str) -> None:
     c.setFont("Helvetica", 7.2); c.setFillColor(MUTED)
     c.drawRightString(W - M, H - 24, section.upper())
     c.line(M, 27, W - M, 27)
-    c.drawString(M, 16, "il-miscusi | Tesseract Hackathon 2026 | Track 05")
+    c.drawString(M, 16, "Tesseract Hackathon 2026 | Track 05")
     c.drawRightString(W - M, 16, str(number))
 
 
@@ -119,7 +119,7 @@ def main() -> None:
     OUT.parent.mkdir(parents=True, exist_ok=True)
     pdf = canvas.Canvas(str(OUT), pagesize=A4)
     pdf.setTitle("Inverse rendering through a multiphysics equilibrium")
-    pdf.setAuthor("il-miscusi")
+    pdf.setAuthor("anonymous")
     pdf.setSubject("Tesseract Hackathon 2026 Track 05 submission paper")
 
     # Page 1 - thesis and contribution.
@@ -131,7 +131,7 @@ def main() -> None:
           M, y, W - 2 * M, SUBTITLE)
     y -= 5
     pdf.setFont("Helvetica", 8); pdf.setFillColor(MUTED)
-    pdf.drawString(M, y, "il-miscusi | github.com/il-miscusi/tesseract-inverse-thermography")
+    pdf.drawString(M, y, "github.com/il-miscusi/tesseract-inverse-thermography")
     y -= 16
     section_rule(pdf, y); y -= 14
     y = p(pdf, "<b>Abstract.</b> A thermal image is not temperature. It is band-integrated Planck radiance, modified by emissivity, reflected ambient, projection, optical blur, vignetting, and sensor calibration. We implement that measurement model as a differentiable JAX Tesseract and pull a pixel loss through it, through a coupled flow-heat fixed point, and back to an unknown volumetric heat source. The coupled system spans a PyTorch viscosity closure, a Fortran Darcy/Brinkman solver with a hand-derived adjoint, and JAX heat transport. The complete pixels-to-source derivative matches finite differences at %.2e in-process and %.2e through four served containers. On a frozen 12-scene bank with 64x32 truth, 32x16 inversion, and a held-out camera view, the calibrated system produces useful diagnoses on 12/12 scenes; a 4%% emissivity error increases power error on 12/12 pairs by a median %.2f percentage points (95%% bootstrap interval %.2f-%.2f). The stronger preregistered harm-prevalence claim is not accepted." % (grad["best_rel_err"], container["best_rel_err"], 100 * dpair["median"], dci[0], dci[1]), M, y, W - 2 * M)

@@ -1,7 +1,7 @@
 # Inverse rendering through a multiphysics equilibrium
 
 **Tesseract Hackathon 2026 — Track 05: Differentiable graphics & rendering**
-Author: il-miscusi · Apache-2.0 · Repository: `tesseract-inverse-thermography`
+Apache-2.0 · Repository: `tesseract-inverse-thermography`
 
 ## 1. Problem
 

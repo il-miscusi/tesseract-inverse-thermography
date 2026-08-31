@@ -209,7 +209,7 @@ def main() -> None:
      short of 6/12, were both independently plausible and at least five points harmful.
      No scene or failed arm is excluded.</p>
   <figure><img src="assets/experiment_d_generalization.png" alt="Paired unseen-scene source power error and held-out residuals">
-    <figcaption>Experiment D. Every point is a frozen scene; red mismatch markers fail
+    <figcaption>Experiment D. Every point is a frozen scene; violet mismatch markers fail
       at least one independent plausibility condition, even when RMS alone is below 2&sigma;.</figcaption></figure>
 
   <h2 id="results">Mechanism check: the coupling is load-bearing</h2>

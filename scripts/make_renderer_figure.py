@@ -50,8 +50,13 @@ def main() -> None:
     delta_centroid = mismatch["centroid_shift_cells"] - full["centroid_shift_cells"]
 
     figstyle.use()
-    fig, axes = plt.subplots(2, 3, figsize=(12.6, 6.5),
-                             gridspec_kw={"height_ratios": [1, 1.05]})
+    fig, axes = plt.subplots(2, 3, figsize=(13.2, 7.8),
+                             gridspec_kw={"height_ratios": [1, 1.05],
+                                          "hspace": 0.34, "wspace": 0.26,
+                                          "top": 0.795, "bottom": 0.115,
+                                          "left": 0.035, "right": 0.94})
+    for i, ax in enumerate(axes.flat):
+        figstyle.panel_letter(ax, "abcdef"[i], x=-0.01, y=1.05)
     source_panel(axes[0, 0], fields["q_true"], "coarse-grid source truth",
                  "analytic projection of 64×32 truth")
     source_panel(axes[0, 1], fields["q_full"], "recovery · calibrated renderer",
@@ -64,7 +69,7 @@ def main() -> None:
     im = axes[1, 0].imshow(measured.T, origin="lower", cmap=figstyle.CMAP_THERMAL,
                            aspect="auto", interpolation="nearest")
     axes[1, 0].set_title("the same noisy 96×64 observation", pad=7)
-    colorbar(fig, im, axes[1, 0], "counts")
+    figstyle.inset_cbar(fig, im, axes[1, 0], "counts")
     clean(axes[1, 0])
 
     rf = np.asarray(fields["residual_full"])
@@ -74,25 +79,25 @@ def main() -> None:
         (axes[1, 1], rf, "residual · calibrated renderer", full["pixel_rms_counts"]),
         (axes[1, 2], rm, "residual · modest camera mismatch", mismatch["pixel_rms_counts"]),
     ):
-        im = ax.imshow(residual.T, origin="lower", cmap="coolwarm", vmin=-lim,
-                       vmax=lim, aspect="auto", interpolation="nearest")
+        im = ax.imshow(residual.T, origin="lower", cmap=figstyle.CMAP_DIVERGING,
+                       vmin=-lim, vmax=lim, aspect="auto",
+                       interpolation="nearest")
         ax.set_title(title, pad=7)
-        ax.text(0.03, 0.05, f"pixel RMS {rms:.2f} counts", transform=ax.transAxes,
-                fontsize=7.2, color=INK,
-                bbox=dict(boxstyle="round,pad=.28", fc=PANEL, ec=GRID))
-        colorbar(fig, im, ax, "counts")
+        figstyle.stamp(ax, f"pixel RMS {rms:.2f} counts", x=0.03, y=0.05,
+                       fontsize=7.2)
+        figstyle.inset_cbar(fig, im, ax, "counts")
         clean(ax)
 
-    fig.text(0.5, 0.005,
+    fig.text(0.5, 0.028,
              f"Calibration error moves the inferred hotspot an additional {delta_centroid:.2f} cells; "
              "both image fits remain above the 2-count noise scale.  "
              "Source panels are normalized individually; power ratios are printed.",
-             ha="center", fontsize=8.5, color=ACCENT2)
-    fig.suptitle(
-        "Calibration shifts the diagnosis under independent-grid model discrepancy",
-        fontsize=12.5, y=1.015, color=INK,
-    )
-    fig.tight_layout(rect=[0, 0.035, 1, 0.98])
+             ha="center", fontsize=8.8, color=ACCENT2)
+    figstyle.headline(
+        fig, "Calibration shifts the diagnosis",
+        "the same observation, inverted through a calibrated renderer and a "
+        "modestly mis-calibrated one, under independent-grid model discrepancy",
+        x=0.035, y=0.975, sub_dy=0.042, size=15)
     out = ROOT / args.out
     fig.savefig(out)
     plt.close(fig)

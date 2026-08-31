@@ -139,47 +139,65 @@ def make_figure(rows: list[dict], summary: dict, output: Path) -> None:
     mismatch_rms = np.asarray([r["results"]["mismatch"]["holdout_rms_noise_sigmas"] for r in rows])
     mismatch_ok = np.asarray([r["results"]["mismatch"]["absolute_plausible_fit"] for r in rows])
 
-    plt.style.use("dark_background")
-    fig, axes = plt.subplots(1, 2, figsize=(12, 4.8), constrained_layout=True)
-    fig.patch.set_facecolor("#07101d")
+    import sys
+    sys.path.insert(0, str(Path(__file__).resolve().parent))
+    import figstyle
+
+    figstyle.use()
+    fig, axes = plt.subplots(1, 2, figsize=(12.6, 5.2),
+                             gridspec_kw={"wspace": 0.24, "top": 0.745,
+                                          "bottom": 0.115, "left": 0.06,
+                                          "right": 0.985})
     for ax in axes:
-        ax.set_facecolor("#0b1728")
-        ax.grid(axis="y", color="white", alpha=0.10, linewidth=0.8)
+        ax.grid(axis="y", alpha=0.45)
         ax.spines[["top", "right"]].set_visible(False)
 
     ax = axes[0]
     for x, a, b in zip(seeds, full_power, mismatch_power):
-        ax.plot([x - 0.12, x + 0.12], [a, b], color="#7890ad", alpha=0.55, lw=1.2)
-    ax.scatter(seeds - 0.12, full_power, color="#59e1c2", label="calibrated", s=38, zorder=3)
-    ax.scatter(seeds + 0.12, mismatch_power, color="#ffb454", label="4% emissivity error", s=38, zorder=3)
-    ax.axhline(5, color="#ff6b7a", ls="--", lw=1, alpha=0.8, label="5 pp harm threshold")
-    ax.set_title("Diagnostic power error on unseen scenes", loc="left", weight="bold")
+        ax.plot([x - 0.12, x + 0.12], [a, b], color=figstyle.FAINT,
+                alpha=0.7, lw=1.1)
+    ax.scatter(seeds - 0.12, full_power, color=figstyle.ACCENT,
+               label="calibrated", s=36, zorder=3)
+    ax.scatter(seeds + 0.12, mismatch_power, color=figstyle.ACCENT2,
+               label="4% emissivity error", s=36, zorder=3)
+    ax.axhline(5, color=figstyle.TRUTH, ls="--", lw=1, alpha=0.9,
+               label="5 pp harm threshold")
+    ax.set_title("Diagnostic power error on unseen scenes", loc="left",
+                 fontsize=10.5, pad=9)
     ax.set_xlabel("frozen bank seed")
     ax.set_ylabel("absolute total-power error (%)")
     ax.set_xticks(seeds)
     ax.legend(frameon=False, fontsize=8)
+    figstyle.panel_letter(ax, "a", x=-0.065, y=1.02)
 
     ax = axes[1]
-    ax.scatter(seeds - 0.12, full_rms, color="#59e1c2", label="calibrated", s=38)
-    colors = np.where(mismatch_ok, "#ffb454", "#ff6b7a")
-    ax.scatter(seeds + 0.12, mismatch_rms, c=colors, label="4% emissivity error", s=38)
-    ax.axhline(2, color="#ff6b7a", ls="--", lw=1, alpha=0.8, label="RMS gate (2σ)")
-    ax.set_title("Held-out pixel residual", loc="left", weight="bold")
+    ax.scatter(seeds - 0.12, full_rms, color=figstyle.ACCENT,
+               label="calibrated", s=36)
+    colors = np.where(mismatch_ok, figstyle.ACCENT2, figstyle.TRUTH)
+    ax.scatter(seeds + 0.12, mismatch_rms, c=colors,
+               label="4% emissivity error", s=36)
+    ax.axhline(2, color=figstyle.TRUTH, ls="--", lw=1, alpha=0.9,
+               label="RMS gate (2σ)")
+    ax.set_title("Held-out pixel residual", loc="left", fontsize=10.5, pad=9)
     ax.set_xlabel("frozen bank seed")
     ax.set_ylabel("RMS / sensor-noise σ")
     ax.set_xticks(seeds)
     ax.legend(frameon=False, fontsize=8)
+    figstyle.panel_letter(ax, "b", x=-0.09, y=1.02)
 
     verdict = summary["preregistered_verdict"]
-    fig.suptitle(
-        "Experiment D — independently frozen 12-scene bank\n"
+    useful = summary["arms"]["full"]["operationally_useful_count"]
+    figstyle.headline(
+        fig,
+        f"The calibrated pipeline generalizes: {useful}/12 useful diagnoses "
+        "on unseen scenes",
+        "Experiment D — independently frozen 12-scene bank:  "
         f"full plausible {summary['arms']['full']['absolute_plausible_fit_count']}/12  ·  "
         f"harmful + plausible mismatch {summary['materially_harmful_plausible_mismatch_count']}/12  ·  "
         f"preregistered claim {'ACCEPTED' if verdict['calibration_risk_claim_accepted'] else 'NOT ACCEPTED'}",
-        x=0.02, ha="left", fontsize=14, weight="bold", color="white",
-    )
+        x=0.028, y=0.965, sub_dy=0.062, size=14)
     output.parent.mkdir(parents=True, exist_ok=True)
-    fig.savefig(output, dpi=180, facecolor=fig.get_facecolor())
+    fig.savefig(output)
     plt.close(fig)
 
 
